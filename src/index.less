@@ -1,0 +1,336 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing : antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#es {
+  background: #f4f4f4;
+
+  .es-header {
+    background: #2a4466;
+    height    : 60px;
+    width     : 100%;
+    position  : fixed;
+    top       : 0;
+    left      : 0;
+    right     : 0;
+    padding   : 10px 0;
+    z-index   : 100;
+    display   : flex;
+    box-shadow: 0 0 4px rgba(0, 0, 0, .14), 0 4px 8px rgba(0, 0, 0, .28);
+
+    .header-content {
+      width  : 1200px;
+      display: flex;
+      margin : 0 auto;
+      padding: 0 15px;
+
+      .logo {
+        color       : #fff;
+        flex        : 0 0 246px;
+        margin-right: 15px;
+        text-align  : center;
+        font-size   : 18px;
+        line-height : 40px;
+      }
+
+      .search-box {
+        border-radius: 3px;
+        display      : flex;
+        flex         : 1;
+
+        .ant-input-search {
+          width     : 100%;
+          background: hsla(0, 0%, 100%, .15);
+          border    : none;
+
+          .ant-input {
+            background: transparent;
+            color     : #fff;
+
+            &::-webkit-input-placeholder {
+              color: #ccc;
+            }
+
+            &:-moz-placeholder {
+              color: #ccc;
+            }
+
+            &::-moz-placeholder {
+              color: #ccc;
+            }
+
+            &::-ms-input-placeholder {
+              color: #ccc;
+            }
+          }
+
+          &-icon::before {
+            border: none;
+          }
+
+          .anticon-search {
+            font-size: 20px;
+            opacity  : .6;
+          }
+        }
+
+        .ant-input-affix-wrapper:focus,
+        .ant-input-affix-wrapper-focused {
+          background: #fff;
+          border    : none;
+          outline   : 0;
+          box-shadow: none;
+
+          .ant-input {
+            background: transparent;
+            color     : #000;
+
+            &::-webkit-input-placeholder {
+              color: #999;
+            }
+
+            &:-moz-placeholder {
+              color: #999;
+            }
+
+            &::-moz-placeholder {
+              color: #999;
+            }
+
+            &::-ms-input-placeholder {
+              color: #999;
+            }
+          }
+        }
+
+        .search-icon {
+          margin     : 0 0 0 15px;
+          font-size  : 20px;
+          opacity    : .6;
+          line-height: 40px;
+        }
+
+        .search-text {
+          box-shadow  : none;
+          background  : transparent;
+          color       : #fff;
+          font-size   : 16px;
+          padding-left: 10px;
+          padding     : 10px 20px;
+          width       : 100%;
+          flex        : 3;
+          border      : none;
+          height      : auto;
+          line-height : normal;
+        }
+      }
+    }
+
+  }
+
+  .es-content {
+    max-width: 1200px;
+    display  : flex;
+    margin   : 60px auto 0;
+    min-width: 800px;
+
+    .es-sider {
+      background: #fff;
+      padding   : 15px;
+      margin    : 15px 0 15px 15px;
+      flex      : 0 0 246px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .08);
+      min-height: calc(100vh - 90px);
+
+      .filter {
+        margin-bottom: 20px;
+
+        &-title {
+          margin-bottom: 5px;
+          font-weight  : 700;
+          font-size    : 14px;
+          color        : #000;
+
+          .clear-option {
+            color      : #08c;
+            cursor     : pointer;
+            font-weight: 500;
+            float      : right;
+          }
+        }
+
+        &-content {
+          flex     : auto;
+          font-size: 14px;
+          color    : #666;
+
+          .ant-checkbox-wrapper {
+            display      : block;
+            margin-bottom: 2px;
+          }
+
+          .ant-radio-wrapper {
+            display      : block;
+            margin-bottom: 2px;
+          }
+        }
+
+        .span-link {
+          color : #08c;
+          cursor: pointer;
+        }
+      }
+    }
+
+    .es-main {
+      padding   : 15px 15px 0;
+      background: #fff;
+      margin    : 15px;
+      flex      : auto;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .08);
+      min-height: 600px;
+
+      .total {
+        height     : 30px;
+        line-height: 30px;
+        color      : #777;
+      }
+
+      .options {
+        display      : flex;
+        align-content: center;
+        text-align   : center;
+        border-radius: 3px;
+        max-height   : 30px;
+        margin-right : 20px;
+
+        .option {
+          flex            : 1;
+          background-color: #fff;
+          border          : 1px solid #ccc;
+          cursor          : pointer;
+          font-weight     : 500;
+          font-size       : 14px;
+          color           : #000;
+          padding         : 5px 10px;
+          line-height     : 20px;
+        }
+
+        .option1 {
+          border-right : none;
+          border-radius: 3px 0 0 3px;
+        }
+
+        .option2 {
+          background-color: #08c;
+          color           : #fff;
+          border-color    : #08c;
+          border-radius   : 0 3px 3px 0;
+        }
+      }
+
+      .filters {
+        &-clear {
+          color       : #08c;
+          padding-left: 15px;
+          cursor      : pointer;
+        }
+      }
+
+      .list {
+        padding: 20px 0;
+
+        &-item {
+          margin-bottom: 20px;
+          display      : flex;
+        }
+
+        .item {
+          &-info {
+            flex   : 1 0 0;
+            padding: 10px;
+
+            .highlight {
+              background: yellow;
+            }
+          }
+
+          &-name {
+            line-height    : 20px;
+            margin         : 0 0 5px;
+            font-size      : 18px;
+            color          : #08c;
+            font-weight    : bold;
+            text-decoration: underline;
+          }
+
+          &-level {
+            line-height: 20px;
+            margin     : 0 0 5px;
+            font-size  : 16px;
+            font-weight: bold;
+          }
+
+          &-time {
+            line-height: 20px;
+            font-size  : 14px;
+            color      : #666;
+            font-weight: 300;
+            margin     : 0 0 5px;
+          }
+
+          &-desc {
+            line-height: 22px;
+            max-width  : 800px;
+          }
+        }
+
+        .ant-skeleton {
+          margin-bottom: 20px;
+        }
+
+        .ant-pagination {
+          display        : flex;
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+
+.ant-picker-range,
+.ant-picker-panel-container {
+  width: 100%;
+
+  .ant-picker-panels {
+    width: 100%;
+
+    .ant-picker-panel {
+      width: 100%;
+
+      .ant-picker-time-panel {
+        width: calc(100% - 280px);
+      }
+    }
+  }
+}
+
+.ant-drawer .ant-col {
+  overflow     : hidden;
+  text-overflow: ellipsis;
+  white-space  : nowrap;
+}
