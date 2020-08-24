@@ -1,4 +1,6 @@
 # ElasticSearch on EarthQuake
+es搜索库前端项目
+
 ## 项目初始化（需要node环境）
 node安装与配置请参考https://www.cnblogs.com/xinaixia/p/8279015.html
 
