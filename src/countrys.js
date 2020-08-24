@@ -1,3 +1,9 @@
+/*
+ *文件名 : country.js
+ *作者 : 刘哲
+ *创建时间 : 2020/8/20
+ *文件描述 : ElasticSearch全世界各国家数据
+ */
 export default [
     { code: "HK", en: "Hong Kong", cn: "香港" },
     { code: "TW", en: "Taiwan", cn: "台湾" },
