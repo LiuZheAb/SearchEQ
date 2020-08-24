@@ -1,11 +1,18 @@
+/*
+ *文件名 : App.js
+ *作者 : 刘哲
+ *创建时间 : 2020/8/17
+ *文件描述 : ElasticSearch前端主体功能及界面
+ */
+
 import React, { Component } from 'react';
 import axios from "axios";
 import 'moment/locale/zh-cn';
 import zhCN from 'antd/es/locale/zh_CN';
 import locale from 'antd/es/date-picker/locale/zh_CN';
 import { ConfigProvider, message, DatePicker, Tag, Select, Input, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer } from "antd";
-import "./index.less";
 import globalCountrys from "./countrys"
+import "./index.less";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -18,6 +25,7 @@ export default class elasticdemo extends Component {
             status: true,
             loading: false,
             keyword: "",
+            resultKey: "",
             hits: null,
             typesSelected: [],
             countrysSelected: [],
@@ -42,17 +50,19 @@ export default class elasticdemo extends Component {
     componentDidMount() {
         this.submitSearch();
     }
-    submitSearch = pageNum => {
+    // 发起搜索请求，提交各项参数
+    submitSearch = (pageNum, string) => {
         let { keyword, minNum, maxNum, startTime, endTime, pageSize, typesSelected, countrysSelected, seismicBeltsSelected } = this.state;
         let _this = this;
         this.setState({
             loading: true,
             hits: null,
-            startPage: pageNum ? pageNum : 1
+            startPage: pageNum ? pageNum : 1,
+            resultKey: string ? string : keyword
         });
-        typesSelected.map(tag => keyword = keyword + tag);
-        countrysSelected.map(tag => keyword = keyword + tag);
-        seismicBeltsSelected.map(tag => keyword = keyword + tag);
+        typesSelected.map(tag => keyword += tag);
+        countrysSelected.map(tag => keyword += tag);
+        seismicBeltsSelected.map(tag => keyword += tag);
         axios.get('http://192.168.2.145:8900/es/getHighLightPage', {
             params: {
                 indexName: "earthquake-indexs",
@@ -74,42 +84,51 @@ export default class elasticdemo extends Component {
             });
         }).catch(function (error) {
             _this.setState({
+                loading: false,
                 status: false
             });
             message.error("检索库链接失败", 2)
         });
     }
-    searchHandler = value => {
+    //修改搜索框内容
+    handleKeywordChange = e => {
         this.setState({
-            keyword: value,
-        }, () => {
-            this.submitSearch();
-        });
+            keyword: e.target.value
+        })
     }
+    //点击搜索图标或按Enter键调用，发起搜索请求
+    searchHandler = value => this.submitSearch(undefined, value);
+    //修改类型、国家、地震带筛选项调用
+    filtersHandler = (key, value) => {
+        this.setState({
+            [key]: value,
+        }, () => { this.submitSearch(); });
+    }
+    //修改震级筛选项调用
     magnitudeHandler = e => {
         let { minNum, maxNum } = this.state;
         switch (e.target.value) {
-            case "lt3":
+            case "<=3":
                 minNum = null;
                 maxNum = 3;
                 break;
-            case "gt3":
+            case ">=3":
                 minNum = 3;
                 maxNum = null;
                 break;
-            case "gt4":
+            case ">=4":
                 minNum = 4;
                 maxNum = null;
                 break;
-            case "gt5":
+            case ">=5":
                 minNum = 5;
                 maxNum = null;
                 break;
-            case "gt6":
+            case ">=6":
                 minNum = 6;
                 maxNum = null;
                 break;
-            case "gt7":
+            case ">=7":
                 minNum = 7;
                 maxNum = null;
                 break;
@@ -122,31 +141,23 @@ export default class elasticdemo extends Component {
             maxNum,
             magnitudeSelected: e.target.value,
             sliderValue: [minNum, maxNum],
-        }, () => {
-            this.submitSearch();
-        });
+        }, () => { this.submitSearch(); });
     }
-    filtersHandler = (key, value) => {
-        this.setState({
-            [key]: value,
-        }, () => {
-            this.submitSearch();
-        });
-    }
+    //修改地震活动时间筛选项调用
     timeHandler = e => {
         let { startTime, endTime } = this.state;
         let currentTimeStamp = new Date().getTime();
         switch (e.target.value) {
-            case 1:
+            case "最近24小时":
                 startTime = currentTimeStamp - 24 * 60 * 60 * 1000;
                 endTime = currentTimeStamp;
                 break;
-            case 2:
+            case "最近一周":
                 startTime = currentTimeStamp - 7 * 24 * 60 * 60 * 1000;
                 endTime = currentTimeStamp;
                 break;
-            case 3:
-                startTime = currentTimeStamp - 30 * 7 * 24 * 60 * 60 * 1000;
+            case "最近一个月":
+                startTime = currentTimeStamp - 30 * 24 * 60 * 60 * 1000;
                 endTime = currentTimeStamp;
                 break;
             default:
@@ -157,51 +168,56 @@ export default class elasticdemo extends Component {
             timeSelected: e.target.value,
             startTime,
             endTime
-        }, () => {
-            this.submitSearch();
-        });
+        }, () => { this.submitSearch(); });
     }
+    //清空类型、国家、地震带筛选项
     clearFilters = () => {
         this.setState({
             typesSelected: [],
             countrysSelected: [],
             seismicBeltsSelected: [],
-        }, () => {
-            this.submitSearch();
-        });
+        }, () => { this.submitSearch(); });
     }
+    //清空震级或地震活动时间筛选项
     clearOption = name => {
-        if (name === "magnitude") {
-            this.setState({
-                minNum: null,
-                maxNum: null,
-                magnitudeSelected: null,
-            }, () => {
-                this.submitSearch();
-            });
-        } else if (name === "time") {
-            this.setState({
-                timeSelected: null,
-            }, () => {
-                this.submitSearch();
-            });
+        switch (name) {
+            case "magnitude":
+                this.setState({
+                    minNum: null,
+                    maxNum: null,
+                    magnitudeSelected: null,
+                }, () => { this.submitSearch(); });
+                break;
+            case "time":
+                this.setState({
+                    timeSelected: null,
+                    startTime: undefined,
+                    endTime: undefined,
+                }, () => { this.submitSearch(); });
+                break;
+            default:
+                break;
         }
     }
-    showCountryModal = () => {
+    //弹出所有国家抽屉调用
+    showCountryDrawer = () => {
         this.setState({
-            countryDrawerVisible: true,
+            countryDrawerVisible: true
         });
     }
+    //选择国家时调用
     handleCountrySelected = value => {
-        this.setState(
-            { countrysSelected: value },
-            () => {
-                this.submitSearch();
-            })
+        this.setState({
+            countrysSelected: value
+        }, () => { this.submitSearch(); })
     }
+    //关闭所有国家抽屉调用
     handleCountryClose = () => {
-        this.setState({ countryDrawerVisible: false });
+        this.setState({
+            countryDrawerVisible: false
+        });
     }
+    //弹出自定义震级模态框调用
     showMagModal = () => {
         let { minNum, maxNum } = this.state;
         this.setState({
@@ -209,9 +225,13 @@ export default class elasticdemo extends Component {
             sliderValue: [minNum, maxNum]
         });
     }
+    //点击自定义震级模态框取消调用
     handleMagCancle = () => {
-        this.setState({ magModalVisible: false });
+        this.setState({
+            magModalVisible: false
+        });
     }
+    //点击自定义震级模态框确定调用
     handleMagOk = () => {
         let { sliderValue } = this.state;
         this.setState({
@@ -219,23 +239,25 @@ export default class elasticdemo extends Component {
             maxNum: sliderValue[1],
             magnitudeSelected: null,
             magModalVisible: false,
-        }, () => {
-            this.submitSearch();
-        });
+        }, () => { this.submitSearch(); });
     }
+    //修改自定义震级滑块调用
     handleSliderChange = value => {
         this.setState({
             sliderValue: value
         });
     }
+    //弹出自定义时间范围模态框调用
     showTimeModal = () => {
         this.setState({
             timeModalVisible: true,
         });
     }
+    //点击自定义时间范围模态框取消调用
     handleTimeCancle = () => {
         this.setState({ timeModalVisible: false });
     }
+    //点击自定义时间范围模态框确定调用
     handleTimeOk = () => {
         let { datePickerValue } = this.state;
         this.setState({
@@ -243,15 +265,15 @@ export default class elasticdemo extends Component {
             endTime: datePickerValue[1]._d.getTime(),
             timeSelected: null,
             timeModalVisible: false
-        }, () => {
-            this.submitSearch();
-        });
+        }, () => { this.submitSearch(); });
     }
+    //修改自定义时间范围调用
     handleTimeChange = value => {
         this.setState({
             datePickerValue: value
         });
     }
+    //修改页面及每页条数调用
     pageHandler = (pageNum, pageSize) => {
         this.setState({
             startPage: pageNum,
@@ -261,30 +283,20 @@ export default class elasticdemo extends Component {
         });
     }
     render() {
-        let { status, loading, keyword, hits,
+        let {
+            status, loading, keyword, resultKey, hits,
             typesSelected, countrysSelected, seismicBeltsSelected,
             magnitudeSelected, timeSelected, countryDrawerVisible, magModalVisible,
-            timeModalVisible, sliderValue, startPage, total, pageSize, listView }
-            = this.state;
-        const magnitudeOptions = [
-            { label: '<=3', value: "lt3" },
-            { label: '>=3', value: "gt3" },
-            { label: '>=4', value: "gt4" },
-            { label: '>=5', value: "gt5" },
-            { label: '>=6', value: "gt6" },
-            { label: '>=7', value: "gt7" },
-        ];
-        const typeFilter = ["震级", "震中", "时间"];
-        const countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"];
-        const seismicBeltFilter = ["环太平洋地震带", "欧亚地震带", "洋脊地震带"];
-        const timeFilter = [
-            { label: '最近24小时', value: 1 },
-            { label: '最近一周', value: 2 },
-            { label: '最近一个月', value: 3 }
-        ];
-        let skeletonArray = [];
+            timeModalVisible, sliderValue, startPage, total, pageSize, listView
+        } = this.state;
+        const magnitudeOptions = ["<=3", ">=3", ">=4", ">=5", ">=6", ">=7"],
+            typeFilter = ["震级", "震中", "时间"],
+            countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
+            seismicBeltFilter = ["环太平洋地震带", "欧亚地震带", "洋脊地震带"],
+            timeFilter = ['最近24小时', "最近一周", "最近一个月"];
+        let skeletonList = [];
         for (let i = 0; i < pageSize; i++) {
-            skeletonArray.push(i);
+            skeletonList.push(<Skeleton key={i} active />);
         }
         return (
             <div id="es">
@@ -295,6 +307,7 @@ export default class elasticdemo extends Component {
                             <Search
                                 placeholder="请输入关键词进行搜索"
                                 onSearch={this.searchHandler}
+                                onChange={this.handleKeywordChange}
                                 defaultValue={keyword}
                             />
                         </div>
@@ -313,7 +326,7 @@ export default class elasticdemo extends Component {
                             <div className="filter-content">
                                 <Checkbox.Group options={countryFilter} value={countrysSelected} onChange={this.filtersHandler.bind(this, "countrysSelected")} />
                                 <div>
-                                    <span onClick={this.showCountryModal} className="span-link">查看更多</span>
+                                    <span onClick={this.showCountryDrawer} className="span-link">查看更多</span>
                                     <Drawer
                                         title="国家"
                                         visible={countryDrawerVisible}
@@ -367,7 +380,7 @@ export default class elasticdemo extends Component {
                             </div>
                         </div>
                         <div className="filter">
-                            <div className="filter-title">地震活动<span className="clear-option" onClick={this.clearOption.bind(this, "time")}>清除选项</span></div>
+                            <div className="filter-title">地震活动时间<span className="clear-option" onClick={this.clearOption.bind(this, "time")}>清除选项</span></div>
                             <div className="filter-content">
                                 <Radio.Group options={timeFilter} value={timeSelected} onChange={this.timeHandler} />
                                 <div>
@@ -437,10 +450,7 @@ export default class elasticdemo extends Component {
                             }
                         </div>
                         <div className="list">
-                            {loading ?
-                                skeletonArray.map(item => <Skeleton key={item} active />)
-                                : null
-                            }
+                            {loading ? skeletonList : null}
                             {hits ?
                                 <>
                                     {hits.map((item, key) =>
@@ -478,7 +488,7 @@ export default class elasticdemo extends Component {
                             {status ?
                                 (hits || loading ?
                                     null :
-                                    <Empty description={`没有 "${keyword}" 的搜索结果`} />
+                                    <Empty description={`没有搜索到 ${resultKey ? '"' + resultKey + '"' : ""} ${magnitudeSelected ? '"震级' + magnitudeSelected + '"' : ""} ${timeSelected ? '"' + timeSelected + '"' : ""} 的结果`} />
                                 )
                                 :
                                 <Result
