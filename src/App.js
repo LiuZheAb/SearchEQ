@@ -63,8 +63,10 @@ export default class elasticdemo extends Component {
         typesSelected.map(tag => keyword += tag);
         countrysSelected.map(tag => keyword += tag);
         seismicBeltsSelected.map(tag => keyword += tag);
+        // axios.get('http://10.2.14.251:8900/es/getHighLightPage', {
         axios.get('http://192.168.2.145:8900/es/getHighLightPage', {
             params: {
+                // indexName: "earthquake-indexs-v2",
                 indexName: "earthquake-indexs",
                 startPage: pageNum ? pageNum : 1,
                 pageSize,
@@ -459,7 +461,7 @@ export default class elasticdemo extends Component {
                                                 <div className="item-name">
                                                     <a
                                                         href={item.url}
-                                                        dangerouslySetInnerHTML={{ __html: keyword || typesSelected.length > 0 || countrysSelected.length > 0 || seismicBeltsSelected.length > 0 ? item["address.epicenter"] : item.address.epicenter }}
+                                                        dangerouslySetInnerHTML={{ __html: item.address.epicenter }}
                                                         target="_blank"
                                                         rel="noopener noreferrer">
                                                     </a>
