@@ -15,7 +15,7 @@ es 搜索库前端项目
 ### \$ npm start
 
 在开发环境运行此 app.<br>
-在浏览器中打开 [http://localhost:3000](http://localhost:3000) 来查看.
+在浏览器中打开 [http://localhost](http://localhost) 来查看.
 
 ## 项目打包
 
