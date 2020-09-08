@@ -21,7 +21,9 @@ const { Search } = Input, { RangePicker } = DatePicker;
 // const api="http://10.2.14.251:8900/es",indexName = "earthquake-indexs-v2";
 const api = "http://192.168.2.134:8900/es", indexName = "earthquake-indexs";
 const magnitudeOptions = ["<=3", ">=3", ">=4", ">=5", ">=6", ">=7"],
+    typeFilter = ["震级", "震中", "时间"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
+    seismicBeltFilter = ["环太平洋地震带", "欧亚地震带", "洋脊地震带"],
     timeFilter = ['最近24小时', "最近一周", "最近一个月"],
     skeletonList = [], skeletonGrid = [], skeletonTable = [];
 for (let i = 0; i < 12; i++) {
@@ -55,7 +57,9 @@ export default class elasticdemo extends Component {
             resultKey: "",
             hits: null,
             options: [],
+            typesSelected: [],
             countrysSelected: [],
+            seismicBeltsSelected: [],
             magnitudeSelected: null,
             timeSelected: null,
             countryDrawerVisible: false,
@@ -76,6 +80,7 @@ export default class elasticdemo extends Component {
         this.mapEvents = {
             created(map) {
                 _this.map = map;
+                // _this.map.setDefaultLayer(new AMap.TileLayer.Satellite());
                 _this.map.setLayers([
                     new window.AMap.TileLayer.Satellite(),
                     new window.AMap.TileLayer.RoadNet(),
@@ -88,7 +93,7 @@ export default class elasticdemo extends Component {
     }
     // 发起搜索请求，提交各项参数
     submitSearch = (pageNum, string) => {
-        let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected } = this.state;
+        let { keyword, minNum, maxNum, startTime, endTime, pageSize, typesSelected, countrysSelected, seismicBeltsSelected } = this.state;
         let _this = this;
         this.setState({
             loading: true,
@@ -96,7 +101,9 @@ export default class elasticdemo extends Component {
             startPage: pageNum ? pageNum : 1,
             resultKey: string ? string : keyword
         });
+        typesSelected.map(tag => keyword += tag);
         countrysSelected.map(tag => keyword += tag);
+        seismicBeltsSelected.map(tag => keyword += tag);
         axios.get(api + "/getHighLightPage", {
             params: {
                 indexName,
@@ -230,7 +237,11 @@ export default class elasticdemo extends Component {
     }
     //清空类型、国家、地震带筛选项
     clearFilters = () => {
-        this.setState({ countrysSelected: [] }, () => this.submitSearch());
+        this.setState({
+            typesSelected: [],
+            countrysSelected: [],
+            seismicBeltsSelected: [],
+        }, () => this.submitSearch());
     }
     //清空震级或地震活动时间筛选项
     clearOption = name => {
@@ -321,7 +332,8 @@ export default class elasticdemo extends Component {
         }, () => this.submitSearch(pageNum));
     }
     render() {
-        let { status, loading, keyword, resultKey, hits, options, countrysSelected,
+        let { status, loading, keyword, resultKey, hits, options,
+            typesSelected, countrysSelected, seismicBeltsSelected,
             magnitudeSelected, timeSelected, countryDrawerVisible, magModalVisible,
             timeModalVisible, sliderValue, startPage, total, pageSize, viewType
         } = this.state;
@@ -469,6 +481,12 @@ export default class elasticdemo extends Component {
                 <div className="es-content">
                     <div className="es-sider">
                         <div className="filter">
+                            <div className="filter-title">类型</div>
+                            <div className="filter-content">
+                                <Checkbox.Group options={typeFilter} value={typesSelected} onChange={this.filtersHandler.bind(this, "typesSelected")} />
+                            </div>
+                        </div>
+                        <div className="filter">
                             <div className="filter-title">国家</div>
                             <div className="filter-content">
                                 <Checkbox.Group options={countryFilter} value={countrysSelected} onChange={this.filtersHandler.bind(this, "countrysSelected")} />
@@ -486,6 +504,12 @@ export default class elasticdemo extends Component {
                                         </Checkbox.Group>
                                     </Drawer>
                                 </div>
+                            </div>
+                        </div>
+                        <div className="filter">
+                            <div className="filter-title">地震带</div>
+                            <div className="filter-content">
+                                <Checkbox.Group options={seismicBeltFilter} value={seismicBeltsSelected} onChange={this.filtersHandler.bind(this, "seismicBeltsSelected")} />
                             </div>
                         </div>
                         <div className="filter">
@@ -550,11 +574,11 @@ export default class elasticdemo extends Component {
                             </div>
                         </div>
                         <div className="filters">
-                            {countrysSelected.length > 0 ?
-                                <>
-                                    {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
-                                    <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
-                                </>
+                            {typesSelected.map((tag, index) => <Tag key={index} color="orange">{tag}</Tag>)}
+                            {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
+                            {seismicBeltsSelected.map((tag, index) => <Tag key={index} color="cyan">{tag}</Tag>)}
+                            {typesSelected.length > 0 || countrysSelected.length > 0 || seismicBeltsSelected.length > 0 ?
+                                <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
                                 : null}
                         </div>
                         <div className="hits-item">

@@ -49,8 +49,13 @@ body {
         display: flex;
         flex: 1;
 
+        .ant-select-auto-complete {
+          width: 100%;
+        }
+
         .ant-input-search {
           width: 100%;
+          height: 40px;
           background: hsla(0, 0%, 100%, 0.15);
           border: none;
 
@@ -162,10 +167,15 @@ body {
           color: #000;
 
           .clear-option {
-            color: #08c;
+            color: #2440b3;
             cursor: pointer;
             font-weight: 500;
             float: right;
+            transition: all 0.3s;
+
+            &:hover {
+              color: #1890ff
+            }
           }
         }
 
@@ -186,8 +196,13 @@ body {
         }
 
         .span-link {
-          color: #08c;
+          color: #2440b3;
           cursor: pointer;
+          transition: all 0.3s;
+
+          &:hover {
+            color: #1890ff
+          }
         }
       }
     }
@@ -244,9 +259,14 @@ body {
 
       .filters {
         &-clear {
-          color: #08c;
+          color: #2440b3;
           padding-left: 15px;
           cursor: pointer;
+          transition: all 0.3s;
+
+          &:hover {
+            color: #1890ff
+          }
         }
       }
 
@@ -254,7 +274,8 @@ body {
         padding: 20px 0;
 
         .highlight {
-          background: yellow;
+          color: red;
+          font-weight: 400;
         }
 
         .amap-container {
@@ -310,34 +331,6 @@ body {
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
-
-            &-name {
-              line-height: 32px;
-              font-size: 18px;
-              color: #08c;
-              font-weight: bold;
-              text-decoration: underline;
-            }
-
-            p {
-              margin-bottom: 0;
-            }
-
-            &-magnitude {
-              line-height: 24px;
-              font-size: 16px;
-              font-weight: bold;
-            }
-
-            &-time {
-              line-height: 24px;
-              font-size: 16px;
-            }
-
-            &-desc {
-              line-height: 20px;
-              max-width: 800px;
-            }
           }
         }
 
@@ -350,34 +343,39 @@ body {
             width: 33.333333%;
             padding: 0 10px;
             margin-bottom: 20px;
+          }
+        }
 
-            &-name {
-              line-height: 32px;
-              font-size: 18px;
-              color: #08c;
-              font-weight: bold;
-              text-decoration: underline;
-            }
+        .item {
+          &-name {
+            line-height: 32px;
+            font-size: 18px;
+            color: #2440b3;
+            text-decoration: underline;
 
-            p {
-              margin-bottom: 0;
+            &:hover {
+              color: #1089ff
             }
+          }
 
-            &-magnitude {
-              line-height: 24px;
-              font-size: 16px;
-              font-weight: bold;
-            }
+          p {
+            margin-bottom: 0;
+          }
 
-            &-time {
-              line-height: 24px;
-              font-size: 16px;
-            }
+          &-magnitude {
+            line-height: 24px;
+            font-size: 16px;
+            font-weight: bold;
+          }
 
-            &-desc {
-              line-height: 20px;
-              max-width: 800px;
-            }
+          &-time {
+            line-height: 24px;
+            font-size: 16px;
+          }
+
+          &-desc {
+            line-height: 20px;
+            max-width: 800px;
           }
         }
 
@@ -392,6 +390,14 @@ body {
 
           .ant-table-tbody>tr>td {
             padding: 16px 0;
+          }
+
+          .table-item-name {
+            color: #2440b3;
+
+            &:hover {
+              color: #1089ff
+            }
           }
         }
 
@@ -495,6 +501,14 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ant-select-dropdown.ant-select-dropdown-placement-bottomLeft {
+  position: fixed;
+}
+
+.highlight {
+  font-weight: bold;
 }
 
 @media (max-width:998px) {
