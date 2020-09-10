@@ -14,6 +14,7 @@ import locale from 'antd/es/date-picker/locale/zh_CN';
 import Map from 'react-amap/lib/map';
 import Marker from 'react-amap/lib/marker';
 import { ConfigProvider, DatePicker, Tag, Input, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
 import "./index.less";
 
@@ -44,14 +45,32 @@ for (let i = 0; i < 12; i++) {
     );
 }
 const disabledDate = current => current && current > moment();
-
-export default class elasticdemo extends Component {
+const s = `
+.......  ...... ....... ....... .......
+....... ....... ... ... ....... .......
+  ...   ...     ... ... ...     ...
+  ...   ......  ....... ....... ...
+  ...    ...... ...     ....... ...
+  ...       ... ...     ...     ...
+....... ....... ...     ....... .......
+....... ......  ...     ....... .......
+`;
+const d = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 Z` : '').join(' ') : '').join('\n');
+function Logo() {
+    return React.createElement("svg", {
+        xmlns: "http://www.w3.org/2000/svg",
+        viewBox: "0 0 80 16"
+    }, React.createElement("path", {
+        d: d
+    }));
+}
+class elasticdemo extends Component {
     constructor(props) {
         super(props);
         this.state = {
             status: true,
             loading: false,
-            keyword: "",
+            keyword: this.props.location.search ? decodeURI(this.props.location.search.split("?")[1]) : "",
             resultKey: "",
             hits: null,
             options: [],
@@ -156,7 +175,10 @@ export default class elasticdemo extends Component {
         }
     }
     //点击搜索图标或按Enter键调用，发起搜索请求
-    searchHandler = value => this.submitSearch(undefined, value);
+    searchHandler = value => {
+        this.props.history.push(this.state.keyword ? "/s?" + this.state.keyword : "/");
+        this.submitSearch(undefined, value);
+    }
     //修改类型、国家、地震带筛选项调用
     filtersHandler = (key, value) => {
         this.setState({ [key]: value }, () => this.submitSearch());
@@ -458,10 +480,13 @@ export default class elasticdemo extends Component {
             <div id="es">
                 <div className="es-header">
                     <div className="header-content">
-                        <div className="logo">世界地震信息库</div>
+                        <div className="logo">
+                            <div style={{ height: 40, padding: "6px 0" }}>{Logo()}</div>
+                            世界地震信息库
+                        </div>
                         <div className="search-box">
-                            <AutoComplete options={options} onSelect={value => { this.setState({ keyword: value }, () => { this.submitSearch(1, value); this.getSearchHintList(); }) }}>
-                                <Search placeholder="请输入关键词进行搜索" onSearch={this.searchHandler} onChange={this.handleKeywordChange} defaultValue={keyword} />
+                            <AutoComplete options={options} onSelect={value => { this.setState({ keyword: value }, () => { this.submitSearch(1, value); this.getSearchHintList(); }) }} defaultValue={keyword}>
+                                <Search placeholder="请输入关键词进行搜索" onSearch={this.searchHandler} onChange={this.handleKeywordChange} />
                             </AutoComplete>
                         </div>
                     </div>
@@ -583,6 +608,16 @@ export default class elasticdemo extends Component {
                     </div>
                 </div>
             </div >
+        )
+    }
+}
+
+export default class index extends Component {
+    render() {
+        return (
+            <Router>
+                <Route path={["/", "/s"]} component={elasticdemo}></Route>
+            </Router>
         )
     }
 }
