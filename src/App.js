@@ -64,6 +64,14 @@ function Logo() {
         d: d
     }));
 }
+function MenuBtn() {
+    return React.createElement("svg", {
+        xmlns: "http://www.w3.org/2000/svg",
+        viewBox: "64 64 896 896"
+    }, React.createElement("path", {
+        d: "M 904 160 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 624 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 -312 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z"
+    }));
+}
 class elasticdemo extends Component {
     constructor(props) {
         super(props);
@@ -78,6 +86,7 @@ class elasticdemo extends Component {
             magnitudeSelected: null,
             timeSelected: null,
             countryDrawerVisible: false,
+            countryDrawerVisible2: false,
             magModalVisible: false,
             timeModalVisible: false,
             startPage: 1,
@@ -89,7 +98,8 @@ class elasticdemo extends Component {
             startTime: undefined,
             endTime: undefined,
             datePickerValue: [undefined, undefined],
-            viewType: "list"
+            viewType: "list",
+            menuDrawerVisible: false
         };
         const _this = this;
         this.mapEvents = {
@@ -178,6 +188,11 @@ class elasticdemo extends Component {
     searchHandler = value => {
         this.props.history.push(this.state.keyword ? "/s?" + this.state.keyword : "/");
         this.submitSearch(undefined, value);
+    }
+    //控制菜单抽屉是否显示
+    handleMenuClose = () => {
+        let { menuDrawerVisible } = this.state;
+        this.setState({ menuDrawerVisible: !menuDrawerVisible })
     }
     //修改类型、国家、地震带筛选项调用
     filtersHandler = (key, value) => {
@@ -279,6 +294,10 @@ class elasticdemo extends Component {
     showCountryDrawer = () => {
         this.setState({ countryDrawerVisible: true });
     }
+    //弹出所有国家抽屉调用
+    showCountryDrawer2 = () => {
+        this.setState({ countryDrawerVisible2: true });
+    }
     //选择国家时调用
     handleCountrySelected = value => {
         this.setState({ countrysSelected: value }, () => this.submitSearch());
@@ -286,6 +305,10 @@ class elasticdemo extends Component {
     //关闭所有国家抽屉调用
     handleCountryClose = () => {
         this.setState({ countryDrawerVisible: false });
+    }
+    //关闭所有国家抽屉调用
+    handleCountryClose2 = () => {
+        this.setState({ countryDrawerVisible2: false });
     }
     //弹出自定义震级模态框调用
     showMagModal = () => {
@@ -343,9 +366,8 @@ class elasticdemo extends Component {
         }, () => this.submitSearch(pageNum));
     }
     render() {
-        let { status, loading, keyword, resultKey, hits, options, countrysSelected,
-            magnitudeSelected, timeSelected, countryDrawerVisible, magModalVisible,
-            timeModalVisible, sliderValue, startPage, total, pageSize, viewType
+        let { status, loading, keyword, resultKey, hits, options, countrysSelected, magnitudeSelected, timeSelected, countryDrawerVisible,
+            countryDrawerVisible2, magModalVisible, timeModalVisible, sliderValue, startPage, total, pageSize, viewType, menuDrawerVisible
         } = this.state;
         let hitItems = null;
         switch (hits && viewType) {
@@ -480,9 +502,73 @@ class elasticdemo extends Component {
             <div id="es">
                 <div className="es-header">
                     <div className="header-content">
+                        <div className="menu">
+                            <div className="menu-btn" onClick={this.handleMenuClose}>
+                                {MenuBtn()}
+                            </div>
+                            <Drawer className="menu-drawer" visible={menuDrawerVisible} onClose={this.handleMenuClose}>
+                                <div className="filter">
+                                    <div className="filter-title">国家</div>
+                                    <div className="filter-content">
+                                        <Checkbox.Group options={countryFilter} value={countrysSelected} onChange={this.filtersHandler.bind(this, "countrysSelected")} />
+                                        <div>
+                                            <span onClick={this.showCountryDrawer2} className="span-link">查看更多</span>
+                                            <Drawer title="国家" visible={countryDrawerVisible2} onClose={this.handleCountryClose2} width="100%">
+                                                <Checkbox.Group onChange={this.handleCountrySelected} value={countrysSelected}>
+                                                    <Row gutter={5}>
+                                                        {globalCountrys.map((country, index) =>
+                                                            <Col span={6} key={index}>
+                                                                <Checkbox value={country.cn}>{country.cn}</Checkbox>
+                                                            </Col>
+                                                        )}
+                                                    </Row>
+                                                </Checkbox.Group>
+                                            </Drawer>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="filter">
+                                    <div className="filter-title">
+                                        震级
+                                        <span className="clear-option" onClick={this.clearOption.bind(this, "magnitude")}>清除选项</span>
+                                    </div>
+                                    <div className="filter-content">
+                                        <Radio.Group options={magnitudeOptions} value={magnitudeSelected} onChange={this.magnitudeHandler} />
+                                        <div>
+                                            <span onClick={this.showMagModal} className="span-link">自定义</span>
+                                            <Modal title="震级范围" visible={magModalVisible} onCancel={this.handleMagCancle} onOk={this.handleMagOk} okText="确定" cancelText="取消">
+                                                <Slider range tooltipVisible min={2} max={9} step={0.1} onChange={this.handleSliderChange}
+                                                    value={[sliderValue[0] ? sliderValue[0] : 2, sliderValue[1] ? sliderValue[1] : 9]}
+                                                />
+                                            </Modal>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="filter">
+                                    <div className="filter-title">
+                                        地震活动时间
+                                        <span className="clear-option" onClick={this.clearOption.bind(this, "time")}>清除选项</span>
+                                    </div>
+                                    <div className="filter-content">
+                                        <Radio.Group options={timeFilter} value={timeSelected} onChange={this.timeHandler} />
+                                        <div>
+                                            <span onClick={this.showTimeModal} className="span-link">自定义</span>
+                                            <Modal title="地震时间" visible={timeModalVisible} onCancel={this.handleTimeCancle} onOk={this.handleTimeOk} okText="确定" cancelText="取消">
+                                                <RangePicker locale={locale} onChange={this.handleTimeChange} disabledDate={disabledDate}
+                                                    showTime={{
+                                                        hideDisabledOptions: true,
+                                                        defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')]
+                                                    }}
+                                                />
+                                            </Modal>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Drawer>
+                        </div>
                         <div className="logo">
                             <div style={{ height: 40, padding: "6px 0" }}>{Logo()}</div>
-                            世界地震信息库
+                            <span>世界地震信息库</span>
                         </div>
                         <div className="search-box">
                             <AutoComplete options={options} onSelect={value => { this.setState({ keyword: value }, () => { this.submitSearch(1, value); this.getSearchHintList(); }) }} defaultValue={keyword}>

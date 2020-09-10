@@ -18,7 +18,7 @@ body {
 
   .es-header {
     background: #2a4466;
-    height: 60px;
+    height: auto;
     width: 100%;
     position: fixed;
     top: 0;
@@ -26,14 +26,26 @@ body {
     right: 0;
     padding: 10px 0;
     z-index: 999;
-    display: flex;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28);
 
     .header-content {
-      width: 1200px;
+      width: 100%;
+      max-width: 1200px;
       display: flex;
       margin: 0 auto;
       padding: 0 15px;
+
+      .menu-btn {
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        position: fixed;
+        top: 10px;
+        left: 5px;
+        fill: #fff;
+        display: none;
+        cursor: pointer;
+      }
 
       .logo {
         color: #fff;
@@ -155,7 +167,6 @@ body {
     max-width: 1200px;
     display: flex;
     margin: 60px auto 0;
-    min-width: 820px;
 
     .es-sider {
       background: #fff;
@@ -164,58 +175,10 @@ body {
       flex: 0 0 246px;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
       min-height: calc(100vh - 90px);
-
-      .filter {
-        margin-bottom: 20px;
-
-        &-title {
-          margin-bottom: 5px;
-          font-weight: 700;
-          font-size: 14px;
-          color: #000;
-
-          .clear-option {
-            color: #2440b3;
-            cursor: pointer;
-            font-weight: 500;
-            float: right;
-            transition: all 0.3s;
-
-            &:hover {
-              color: #1890ff
-            }
-          }
-        }
-
-        &-content {
-          flex: auto;
-          font-size: 14px;
-          color: #666;
-
-          .ant-checkbox-wrapper {
-            display: block;
-            margin-bottom: 2px;
-          }
-
-          .ant-radio-wrapper {
-            display: block;
-            margin-bottom: 2px;
-          }
-        }
-
-        .span-link {
-          color: #2440b3;
-          cursor: pointer;
-          transition: all 0.3s;
-
-          &:hover {
-            color: #1890ff
-          }
-        }
-      }
     }
 
     .es-main {
+      width: 100%;
       padding: 20px 20px 0;
       background: #fff;
       margin: 15px;
@@ -505,6 +468,55 @@ body {
   }
 }
 
+.filter {
+  margin-bottom: 20px;
+
+  &-title {
+    margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #000;
+
+    .clear-option {
+      color: #2440b3;
+      cursor: pointer;
+      font-weight: 500;
+      float: right;
+      transition: all 0.3s;
+
+      &:hover {
+        color: #1890ff
+      }
+    }
+  }
+
+  &-content {
+    flex: auto;
+    font-size: 14px;
+    color: #666;
+
+    .ant-checkbox-wrapper {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .ant-radio-wrapper {
+      display: block;
+      margin-bottom: 2px;
+    }
+  }
+
+  .span-link {
+    color: #2440b3;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      color: #1890ff
+    }
+  }
+}
+
 .ant-drawer .ant-col {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -522,5 +534,42 @@ body {
 @media (max-width:998px) {
   #es .es-content .es-main .hits-item .grid-item {
     width: 50%;
+  }
+}
+
+@media (max-width:768px) {
+  #es {
+    .es-header {
+      .header-content {
+        display: block;
+        padding: 0 10px;
+
+        .menu-btn {
+          display: block;
+        }
+
+        .logo {
+          margin: 0 0 10px;
+          justify-content: center;
+
+          span {
+            margin-left: 20px;
+          }
+        }
+      }
+    }
+
+    .es-sider {
+      display: none;
+    }
+
+    .es-content {
+      margin-top: 110px;
+
+      .es-main {
+        margin: 0;
+        padding: 10px 10px 0;
+      }
+    }
   }
 }
