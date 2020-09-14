@@ -13,13 +13,13 @@ import zhCN from 'antd/es/locale/zh_CN';
 import locale from 'antd/es/date-picker/locale/zh_CN';
 import Map from 'react-amap/lib/map';
 import Marker from 'react-amap/lib/marker';
-import { ConfigProvider, DatePicker, Tag, Input, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
+import { ConfigProvider, DatePicker, Tag, Button, Input, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
 import "./index.less";
 
 const { Search } = Input, { RangePicker } = DatePicker;
-// const api="http://10.2.14.251:8900/es",indexName = "earthquake-indexs-v2";
+// const api = "http://10.2.14.251:8900/es", indexName = "earthquake-indexs-v2";
 const api = "http://192.168.2.134:8900/es", indexName = "earthquake-indexs";
 const magnitudeOptions = ["<=3", ">=3", ">=4", ">=5", ">=6", ">=7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
@@ -46,31 +46,30 @@ for (let i = 0; i < 12; i++) {
 }
 const disabledDate = current => current && current > moment();
 const s = `
-.......  ...... ....... ....... .......
-....... ....... ... ... ....... .......
-  ...   ...     ... ... ...     ...
-  ...   ......  ....... ....... ...
-  ...    ...... ...     ....... ...
-  ...       ... ...     ...     ...
-....... ....... ...     ....... .......
-....... ......  ...     ....... .......
+.......  ...... ....... ....... .......         ....... ... ...  ......
+....... ....... ... ... ....... .......         ....... ... ... .......
+  ...   ...     ... ... ...     ...             ...     ... ... ...
+  ...   ......  ....... ....... ...     ....... ....... ... ... ......
+  ...    ...... ...     ....... ...     ....... ....... .......  ......
+  ...       ... ...     ...     ...             ...      .....      ...
+....... ....... ...     ....... .......         .......   ...   .......
+....... ......  ...     ....... .......         .......    .    ......
 `;
-const d = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 Z` : '').join(' ') : '').join('\n');
+const d = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 h1 Z` : '').join(' ') : '').join('\n');
 function Logo() {
     return React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg",
-        viewBox: "0 0 80 16"
-    }, React.createElement("path", {
-        d: d
-    }));
+        viewBox: "0 0 144 16"
+    }, React.createElement("path", { d })
+    );
 }
+const menuD = "M 904 160 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 624 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 -312 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z";
 function MenuBtn() {
     return React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg",
         viewBox: "64 64 896 896"
-    }, React.createElement("path", {
-        d: "M 904 160 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 624 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 -312 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z"
-    }));
+    }, React.createElement("path", { d: menuD })
+    );
 }
 class elasticdemo extends Component {
     constructor(props) {
@@ -78,7 +77,7 @@ class elasticdemo extends Component {
         this.state = {
             status: true,
             loading: false,
-            keyword: this.props.location.search ? decodeURI(this.props.location.search.split("?")[1]) : "",
+            keyword: this.props.location.search ? decodeURIComponent(this.props.location.search.split("?")[1]) : "",
             resultKey: "",
             hits: null,
             options: [],
@@ -86,7 +85,6 @@ class elasticdemo extends Component {
             magnitudeSelected: null,
             timeSelected: null,
             countryDrawerVisible: false,
-            countryDrawerVisible2: false,
             magModalVisible: false,
             timeModalVisible: false,
             startPage: 1,
@@ -99,7 +97,8 @@ class elasticdemo extends Component {
             endTime: undefined,
             datePickerValue: [undefined, undefined],
             viewType: "list",
-            menuDrawerVisible: false
+            menuDrawerVisible: false,
+            collapsed: false
         };
         const _this = this;
         this.mapEvents = {
@@ -113,7 +112,18 @@ class elasticdemo extends Component {
         };
     }
     componentDidMount() {
+        window.addEventListener('resize', this.handleResize.bind(this)) //监听窗口大小改变
+        this.handleClientW(window.innerWidth);
         this.submitSearch();
+    }
+    //比较窗口与768px大小
+    handleClientW = width => {
+        this.setState({
+            collapsed: width <= 768
+        })
+    }
+    handleResize = e => {
+        this.handleClientW(e.target.innerWidth);
     }
     // 发起搜索请求，提交各项参数
     submitSearch = (pageNum, string) => {
@@ -294,10 +304,6 @@ class elasticdemo extends Component {
     showCountryDrawer = () => {
         this.setState({ countryDrawerVisible: true });
     }
-    //弹出所有国家抽屉调用
-    showCountryDrawer2 = () => {
-        this.setState({ countryDrawerVisible2: true });
-    }
     //选择国家时调用
     handleCountrySelected = value => {
         this.setState({ countrysSelected: value }, () => this.submitSearch());
@@ -305,10 +311,6 @@ class elasticdemo extends Component {
     //关闭所有国家抽屉调用
     handleCountryClose = () => {
         this.setState({ countryDrawerVisible: false });
-    }
-    //关闭所有国家抽屉调用
-    handleCountryClose2 = () => {
-        this.setState({ countryDrawerVisible2: false });
     }
     //弹出自定义震级模态框调用
     showMagModal = () => {
@@ -367,7 +369,7 @@ class elasticdemo extends Component {
     }
     render() {
         let { status, loading, keyword, resultKey, hits, options, countrysSelected, magnitudeSelected, timeSelected, countryDrawerVisible,
-            countryDrawerVisible2, magModalVisible, timeModalVisible, sliderValue, startPage, total, pageSize, viewType, menuDrawerVisible
+            magModalVisible, timeModalVisible, sliderValue, startPage, total, pageSize, viewType, menuDrawerVisible, collapsed
         } = this.state;
         let hitItems = null;
         switch (hits && viewType) {
@@ -379,9 +381,7 @@ class elasticdemo extends Component {
                     {hits.map(({ url, address, magnitude, datetime, depth }, key) =>
                         <div className="list-item item" key={key}>
                             <div style={{ maxWidth: "50%" }}>
-                                <a className="item-name" href={url} target="_blank" rel="noopener noreferrer"
-                                    dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }}
-                                />
+                                <a className="item-name" href={url} target="_blank" rel="noopener noreferrer" dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }} />
                                 <p className="item-magnitude">震级：{magnitude}级</p>
                                 <p className="item-time">时间：{datetime}</p>
                                 <p className="item-desc">来源：中国地震台网正式测定</p>
@@ -417,9 +417,7 @@ class elasticdemo extends Component {
                                     </Marker>
                                 </Map>
                             </div>
-                            <a className="item-name" href={url} target="_blank" rel="noopener noreferrer"
-                                dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }}
-                            />
+                            <a className="item-name" href={url} target="_blank" rel="noopener noreferrer" dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }} />
                             <p className="item-magnitude">震级：{magnitude}级</p>
                             <p className="item-time">时间：{datetime}</p>
                             <p className="item-desc">来源：中国地震台网正式测定</p>
@@ -435,13 +433,13 @@ class elasticdemo extends Component {
                     return {
                         key: index,
                         epicenter: address.epicenter ? address.epicenter : "未命名",
-                        magnitude: magnitude,
-                        datetime: datetime,
+                        magnitude,
+                        datetime,
                         source: "中国地震台网正式测定",
                         longitude: address.longitude,
                         latitude: address.latitude,
-                        depth: depth,
-                        url: url,
+                        depth,
+                        url
                     }
                 });
                 const columns = [{
@@ -498,6 +496,64 @@ class elasticdemo extends Component {
                 hitItems = null;
                 break;
         }
+        const filters = <>
+            <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+                <Button type="primary"><a href="http://localhost:3000" target="_blank" rel="noopener noreferrer">可视化</a></Button>
+                <Button type="primary"><a href="http://10.2.14.251:5601/app/kibana#/visualize/edit/c813d550-1b2e-11ea-90dd-a99c382af56d?embed=true&_g=()&_a=(filters:!(),linked:!f,query:(language:kuery,query:''),uiState:(mapCenter:!(33.760882000869195,96.24023437500001),mapZoom:4),vis:(aggs:!((enabled:!t,id:'1',params:(),schema:metric,type:count),(enabled:!t,id:'2',params:(autoPrecision:!t,field:location,isFilteredByCollar:!t,mapBounds:(bottom_right:(lat:15.496032414238634,lon:140.537109375),top_left:(lat:46.830133640447414,lon:66.53320312499999)),mapCenter:(lat:32.509761735919426,lon:103.53515625),mapZoom:4,precision:3,useGeocentroid:!t),schema:segment,type:geohash_grid)),params:(addTooltip:!f,colorSchema:'Green+to+Red',dimensions:(geocentroid:(accessor:3,aggType:geo_centroid,format:(id:string),params:()),geohash:(accessor:1,aggType:geohash_grid,format:(id:string),params:(precision:3,useGeocentroid:!t)),metric:(accessor:2,aggType:count,format:(id:number),params:())),heatClusterSize:1.8,isDesaturated:!f,legendPosition:bottomright,mapCenter:!(0,0),mapType:Heatmap,mapZoom:2,wms:(enabled:!t,options:(attribution:'Maps+provided+by+Geoserver+of+ISPEC',format:image%2Fpng,layers:'forkibana:worldmap',styles:redline,transparent:!t,version:'1.3.0'),selectedTmsLayer:(attribution:'',id:road_map,maxZoom:20,minZoom:0,origin:elastic_maps_service),url:'http:%2F%2F10.2.14.246:8080%2Fgeoserver%2Fforkibana%2Fwms%3F')),title:geoserver2,type:tile_map))" target="_blank" rel="noopener noreferrer">Kibana</a></Button>
+            </div>
+            <div className="filter">
+                <div className="filter-title">国家</div>
+                <div className="filter-content">
+                    <Checkbox.Group options={countryFilter} value={countrysSelected} onChange={this.filtersHandler.bind(this, "countrysSelected")} />
+                    <div>
+                        <span onClick={this.showCountryDrawer} className="span-link">查看更多</span>
+                        <Drawer title="国家" visible={countryDrawerVisible} onClose={this.handleCountryClose} width={collapsed ? "100%" : "50%"}>
+                            <Checkbox.Group onChange={this.handleCountrySelected} value={countrysSelected}>
+                                <Row gutter={5}>
+                                    {globalCountrys.map((country, index) =>
+                                        <Col span={6} key={index}>
+                                            <Checkbox value={country.cn}>{country.cn}</Checkbox>
+                                        </Col>
+                                    )}
+                                </Row>
+                            </Checkbox.Group>
+                        </Drawer>
+                    </div>
+                </div>
+            </div>
+            <div className="filter">
+                <div className="filter-title">
+                    <span>震级</span>
+                    <span className="clear-option" onClick={this.clearOption.bind(this, "magnitude")}>取消筛选</span>
+                </div>
+                <div className="filter-content">
+                    <Radio.Group options={magnitudeOptions} value={magnitudeSelected} onChange={this.magnitudeHandler} />
+                    <div>
+                        <span onClick={this.showMagModal} className="span-link">自定义</span>
+                        <Modal title="震级范围" visible={magModalVisible} onCancel={this.handleMagCancle} onOk={this.handleMagOk} okText="确定" cancelText="取消">
+                            <Slider range min={2} max={9} step={0.1} onChange={this.handleSliderChange} value={[sliderValue[0] ? sliderValue[0] : 2, sliderValue[1] ? sliderValue[1] : 9]} />
+                        </Modal>
+                    </div>
+                </div>
+            </div>
+            <div className="filter">
+                <div className="filter-title">
+                    <span>地震活动时间</span>
+                    <span className="clear-option" onClick={this.clearOption.bind(this, "time")}>取消筛选</span>
+                </div>
+                <div className="filter-content">
+                    <Radio.Group options={timeFilter} value={timeSelected} onChange={this.timeHandler} />
+                    <div>
+                        <span onClick={this.showTimeModal} className="span-link">自定义</span>
+                        <Modal title="地震时间" visible={timeModalVisible} onCancel={this.handleTimeCancle} onOk={this.handleTimeOk} okText="确定" cancelText="取消">
+                            <RangePicker locale={locale} onChange={this.handleTimeChange} disabledDate={disabledDate}
+                                showTime={{ hideDisabledOptions: true, defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')] }}
+                            />
+                        </Modal>
+                    </div>
+                </div>
+            </div>
+        </>;
         return (
             <div id="es">
                 <div className="es-header">
@@ -507,68 +563,11 @@ class elasticdemo extends Component {
                                 {MenuBtn()}
                             </div>
                             <Drawer className="menu-drawer" visible={menuDrawerVisible} onClose={this.handleMenuClose}>
-                                <div className="filter">
-                                    <div className="filter-title">国家</div>
-                                    <div className="filter-content">
-                                        <Checkbox.Group options={countryFilter} value={countrysSelected} onChange={this.filtersHandler.bind(this, "countrysSelected")} />
-                                        <div>
-                                            <span onClick={this.showCountryDrawer2} className="span-link">查看更多</span>
-                                            <Drawer title="国家" visible={countryDrawerVisible2} onClose={this.handleCountryClose2} width="100%">
-                                                <Checkbox.Group onChange={this.handleCountrySelected} value={countrysSelected}>
-                                                    <Row gutter={5}>
-                                                        {globalCountrys.map((country, index) =>
-                                                            <Col span={6} key={index}>
-                                                                <Checkbox value={country.cn}>{country.cn}</Checkbox>
-                                                            </Col>
-                                                        )}
-                                                    </Row>
-                                                </Checkbox.Group>
-                                            </Drawer>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="filter">
-                                    <div className="filter-title">
-                                        震级
-                                        <span className="clear-option" onClick={this.clearOption.bind(this, "magnitude")}>清除选项</span>
-                                    </div>
-                                    <div className="filter-content">
-                                        <Radio.Group options={magnitudeOptions} value={magnitudeSelected} onChange={this.magnitudeHandler} />
-                                        <div>
-                                            <span onClick={this.showMagModal} className="span-link">自定义</span>
-                                            <Modal title="震级范围" visible={magModalVisible} onCancel={this.handleMagCancle} onOk={this.handleMagOk} okText="确定" cancelText="取消">
-                                                <Slider range tooltipVisible min={2} max={9} step={0.1} onChange={this.handleSliderChange}
-                                                    value={[sliderValue[0] ? sliderValue[0] : 2, sliderValue[1] ? sliderValue[1] : 9]}
-                                                />
-                                            </Modal>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="filter">
-                                    <div className="filter-title">
-                                        地震活动时间
-                                        <span className="clear-option" onClick={this.clearOption.bind(this, "time")}>清除选项</span>
-                                    </div>
-                                    <div className="filter-content">
-                                        <Radio.Group options={timeFilter} value={timeSelected} onChange={this.timeHandler} />
-                                        <div>
-                                            <span onClick={this.showTimeModal} className="span-link">自定义</span>
-                                            <Modal title="地震时间" visible={timeModalVisible} onCancel={this.handleTimeCancle} onOk={this.handleTimeOk} okText="确定" cancelText="取消">
-                                                <RangePicker locale={locale} onChange={this.handleTimeChange} disabledDate={disabledDate}
-                                                    showTime={{
-                                                        hideDisabledOptions: true,
-                                                        defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')]
-                                                    }}
-                                                />
-                                            </Modal>
-                                        </div>
-                                    </div>
-                                </div>
+                                {filters}
                             </Drawer>
                         </div>
                         <div className="logo">
-                            <div style={{ height: 40, padding: "6px 0" }}>{Logo()}</div>
-                            <span>世界地震信息库</span>
+                            {Logo()}
                         </div>
                         <div className="search-box">
                             <AutoComplete options={options} onSelect={value => { this.setState({ keyword: value }, () => { this.submitSearch(1, value); this.getSearchHintList(); }) }} defaultValue={keyword}>
@@ -578,86 +577,26 @@ class elasticdemo extends Component {
                     </div>
                 </div>
                 <div className="es-content">
-                    <div className="es-sider">
-                        <div className="filter">
-                            <div className="filter-title">国家</div>
-                            <div className="filter-content">
-                                <Checkbox.Group options={countryFilter} value={countrysSelected} onChange={this.filtersHandler.bind(this, "countrysSelected")} />
-                                <div>
-                                    <span onClick={this.showCountryDrawer} className="span-link">查看更多</span>
-                                    <Drawer title="国家" visible={countryDrawerVisible} onClose={this.handleCountryClose} width="50%">
-                                        <Checkbox.Group onChange={this.handleCountrySelected} value={countrysSelected}>
-                                            <Row gutter={5}>
-                                                {globalCountrys.map((country, index) =>
-                                                    <Col span={6} key={index}>
-                                                        <Checkbox value={country.cn}>{country.cn}</Checkbox>
-                                                    </Col>
-                                                )}
-                                            </Row>
-                                        </Checkbox.Group>
-                                    </Drawer>
-                                </div>
-                            </div>
+                    {collapsed ?
+                        null
+                        :
+                        <div className="es-sider">
+                            {filters}
                         </div>
-                        <div className="filter">
-                            <div className="filter-title">
-                                震级
-                                <span className="clear-option" onClick={this.clearOption.bind(this, "magnitude")}>清除选项</span>
-                            </div>
-                            <div className="filter-content">
-                                <Radio.Group options={magnitudeOptions} value={magnitudeSelected} onChange={this.magnitudeHandler} />
-                                <div>
-                                    <span onClick={this.showMagModal} className="span-link">自定义</span>
-                                    <Modal title="震级范围" visible={magModalVisible} onCancel={this.handleMagCancle} onOk={this.handleMagOk} okText="确定" cancelText="取消">
-                                        <Slider range tooltipVisible min={2} max={9} step={0.1} onChange={this.handleSliderChange}
-                                            value={[sliderValue[0] ? sliderValue[0] : 2, sliderValue[1] ? sliderValue[1] : 9]}
-                                        />
-                                    </Modal>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="filter">
-                            <div className="filter-title">
-                                地震活动时间
-                                <span className="clear-option" onClick={this.clearOption.bind(this, "time")}>清除选项</span>
-                            </div>
-                            <div className="filter-content">
-                                <Radio.Group options={timeFilter} value={timeSelected} onChange={this.timeHandler} />
-                                <div>
-                                    <span onClick={this.showTimeModal} className="span-link">自定义</span>
-                                    <Modal title="地震时间" visible={timeModalVisible} onCancel={this.handleTimeCancle} onOk={this.handleTimeOk} okText="确定" cancelText="取消">
-                                        <RangePicker locale={locale} onChange={this.handleTimeChange} disabledDate={disabledDate}
-                                            showTime={{
-                                                hideDisabledOptions: true,
-                                                defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')]
-                                            }}
-                                        />
-                                    </Modal>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    }
                     <div className="es-main">
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <div className="total">共找到{total}条结果</div>
                             <div className="options">
-                                <div className={viewType === "grid" ? "option-active option" : "option"}
-                                    onClick={() => this.setState({ viewType: "grid" })}
-                                    style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }}
-                                >
+                                <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >
                                     网格
-                                    </div>
-                                <div className={viewType === "list" ? "option-active option" : "option"}
-                                    onClick={() => this.setState({ viewType: "list" })}
-                                >
+                                </div>
+                                <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>
                                     列表
-                                    </div>
-                                <div className={viewType === "table" ? "option-active option" : "option"}
-                                    onClick={() => this.setState({ viewType: "table" })}
-                                    style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}
-                                >
+                                </div>
+                                <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>
                                     表格
-                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="filters">
@@ -692,6 +631,11 @@ class elasticdemo extends Component {
                                 : <Result status="error" title="检索库链接失败" subTitle="请检查网络链接或联系管理员." />}
                         </div>
                     </div>
+                </div>
+                <div className="es-footer">
+                    <p>北京白家疃地球科学国家野外科学观测研究站</p>
+                    <p>Copyright &copy;2020 All rights reserved.</p>
+                    <p>官方网站: <a href="http://www.neobji.ac.cn/" target="_blank" rel="noopener noreferrer">http://www.neobji.ac.cn/</a></p>
                 </div>
             </div >
         )
