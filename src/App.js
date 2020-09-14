@@ -13,7 +13,7 @@ import zhCN from 'antd/es/locale/zh_CN';
 import locale from 'antd/es/date-picker/locale/zh_CN';
 import Map from 'react-amap/lib/map';
 import Marker from 'react-amap/lib/marker';
-import { ConfigProvider, DatePicker, Tag, Button, Input, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
+import { ConfigProvider, DatePicker, Tag, Button, Input, InputNumber, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
 import "./index.less";
@@ -21,9 +21,10 @@ import "./index.less";
 const { Search } = Input, { RangePicker } = DatePicker;
 // const api = "http://10.2.14.251:8900/es", indexName = "earthquake-indexs-v2";
 const api = "http://192.168.2.134:8900/es", indexName = "earthquake-indexs";
-const magnitudeOptions = ["<=3", ">=3", ">=4", ">=5", ">=6", ">=7"],
+const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
     timeFilter = ['最近24小时', "最近一周", "最近一个月"],
+    depthFilter = ['= -1', "0 - 60", "60 - 300", ">= 300"],
     skeletonList = [], skeletonGrid = [], skeletonTable = [];
 for (let i = 0; i < 12; i++) {
     skeletonList.push(
@@ -87,18 +88,25 @@ class elasticdemo extends Component {
             countryDrawerVisible: false,
             magModalVisible: false,
             timeModalVisible: false,
+            depthModalVisible: false,
             startPage: 1,
             pageSize: 12,
             total: 0,
             minNum: null,
             maxNum: null,
-            sliderValue: [2, 9],
+            magSliderValue: [2, 9],
             startTime: undefined,
             endTime: undefined,
             datePickerValue: [undefined, undefined],
             viewType: "list",
             menuDrawerVisible: false,
-            collapsed: false
+            collapsed: false,
+            startDepth: null,
+            endDepth: null,
+            depthSelected: null,
+            depSliderValue: [null, null],
+            timeSort: null,
+            minMatch: 0
         };
         const _this = this;
         this.mapEvents = {
@@ -115,6 +123,8 @@ class elasticdemo extends Component {
         window.addEventListener('resize', this.handleResize.bind(this)) //监听窗口大小改变
         this.handleClientW(window.innerWidth);
         this.submitSearch();
+
+
     }
     //比较窗口与768px大小
     handleClientW = width => {
@@ -127,7 +137,7 @@ class elasticdemo extends Component {
     }
     // 发起搜索请求，提交各项参数
     submitSearch = (pageNum, string) => {
-        let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected } = this.state;
+        let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected, startDepth, endDepth, timeSort, minMatch } = this.state;
         let _this = this;
         this.setState({
             loading: true,
@@ -144,8 +154,12 @@ class elasticdemo extends Component {
                 highFields: keyword,
                 minNum,
                 maxNum,
+                startDepth,
+                endDepth,
                 startTime,
-                endTime
+                endTime,
+                timeSort,
+                minMatch
             }
         }).then(function (response) {
             let { list, total } = response.data;
@@ -212,27 +226,27 @@ class elasticdemo extends Component {
     magnitudeHandler = e => {
         let { minNum, maxNum } = this.state;
         switch (e.target.value) {
-            case "<=3":
+            case "<= 3":
                 minNum = null;
                 maxNum = 3;
                 break;
-            case ">=3":
+            case ">= 3":
                 minNum = 3;
                 maxNum = null;
                 break;
-            case ">=4":
+            case ">= 4":
                 minNum = 4;
                 maxNum = null;
                 break;
-            case ">=5":
+            case ">= 5":
                 minNum = 5;
                 maxNum = null;
                 break;
-            case ">=6":
+            case ">= 6":
                 minNum = 6;
                 maxNum = null;
                 break;
-            case ">=7":
+            case ">= 7":
                 minNum = 7;
                 maxNum = null;
                 break;
@@ -245,7 +259,7 @@ class elasticdemo extends Component {
             minNum,
             maxNum,
             magnitudeSelected: e.target.value,
-            sliderValue: [minNum, maxNum],
+            magSliderValue: [minNum, maxNum],
         }, () => this.submitSearch());
     }
     //修改地震活动时间筛选项调用
@@ -275,6 +289,38 @@ class elasticdemo extends Component {
             endTime
         }, () => this.submitSearch());
     }
+    //修改震源深度筛选项调用
+    depthHandler = e => {
+        let { startDepth, endDepth } = this.state;
+        switch (e.target.value) {
+            case "= -1":
+                startDepth = -1;
+                endDepth = -1;
+                break;
+            case "0 - 60":
+                startDepth = 0;
+                endDepth = 60;
+                break;
+            case "60 - 300":
+                startDepth = 60;
+                endDepth = 300;
+                break;
+            case ">= 300":
+                startDepth = 300;
+                endDepth = null;
+                break;
+            default:
+                startDepth = null;
+                endDepth = null;
+                break;
+        };
+        this.setState({
+            startDepth,
+            endDepth,
+            depthSelected: e.target.value,
+            depSliderValue: [startDepth, endDepth],
+        }, () => this.submitSearch());
+    }
     //清空类型、国家、地震带筛选项
     clearFilters = () => {
         this.setState({ countrysSelected: [] }, () => this.submitSearch());
@@ -294,6 +340,13 @@ class elasticdemo extends Component {
                     timeSelected: null,
                     startTime: undefined,
                     endTime: undefined,
+                }, () => this.submitSearch());
+                break;
+            case "depth":
+                this.setState({
+                    startDepth: null,
+                    endDepth: null,
+                    depthSelected: null,
                 }, () => this.submitSearch());
                 break;
             default:
@@ -317,7 +370,7 @@ class elasticdemo extends Component {
         let { minNum, maxNum } = this.state;
         this.setState({
             magModalVisible: true,
-            sliderValue: [minNum, maxNum]
+            magSliderValue: [minNum, maxNum]
         });
     }
     //点击自定义震级模态框取消调用
@@ -326,17 +379,17 @@ class elasticdemo extends Component {
     }
     //点击自定义震级模态框确定调用
     handleMagOk = () => {
-        let { sliderValue } = this.state;
+        let { magSliderValue } = this.state;
         this.setState({
-            minNum: sliderValue[0],
-            maxNum: sliderValue[1],
+            minNum: magSliderValue[0],
+            maxNum: magSliderValue[1],
             magnitudeSelected: null,
             magModalVisible: false,
         }, () => this.submitSearch());
     }
     //修改自定义震级滑块调用
     handleSliderChange = value => {
-        this.setState({ sliderValue: value });
+        this.setState({ magSliderValue: value });
     }
     //弹出自定义时间范围模态框调用
     showTimeModal = () => {
@@ -360,6 +413,32 @@ class elasticdemo extends Component {
     handleTimeChange = value => {
         this.setState({ datePickerValue: value });
     }
+    //弹出自定义震源深度模态框调用
+    showDepModal = () => {
+        let { startDepth, endDepth } = this.state;
+        this.setState({
+            depthModalVisible: true,
+            depSliderValue: [startDepth, endDepth]
+        });
+    }
+    //点击自定义震源深度模态框取消调用
+    handleDepCancle = () => {
+        this.setState({ depthModalVisible: false });
+    }
+    //点击自定义震源深度模态框确定调用
+    handleDepOk = () => {
+        let { depSliderValue } = this.state;
+        this.setState({
+            startDepth: depSliderValue[0],
+            endDepth: depSliderValue[1],
+            depthSelected: null,
+            depthModalVisible: false,
+        }, () => this.submitSearch());
+    }
+    //修改自定义震源深度滑块调用
+    handleDepSliderChange = value => {
+        this.setState({ depSliderValue: value });
+    }
     //修改页面及每页条数调用
     pageHandler = (pageNum, pageSize) => {
         this.setState({
@@ -367,9 +446,40 @@ class elasticdemo extends Component {
             pageSize
         }, () => this.submitSearch(pageNum));
     }
+    //时间排序
+    timeSorter = () => {
+        let { timeSort } = this.state;
+        this.setState({
+            timeSort: timeSort === null ? true : !timeSort
+        }, () => this.submitSearch());
+    }
+    //下载搜索结果
+    downloadSearchResult = () => {
+        let { hits, keyword } = this.state;
+        let title = "eqid,epicenter,datetime,magnitude,latitude,longitude,depth,createby,url,eqim\n"
+        let result = title + hits.map(({ eqid, address, datetime, magnitude, depth, createby, url, eqim }) =>
+            `${"\"" + eqid + "\""},${"\"" + address.epicenter + "\""},${"\"" + datetime + "\""},${"\"" + magnitude + "\""},${"\"" + address.latitude + "\""},${"\"" + address.longitude + "\""},${"\"" + depth + "\""},${"\"" + createby + "\""},${"\"" + url + "\""},${"\"" + eqim + "\""}`
+        ).join("\n");
+        var blob = new Blob([result], { type: '.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel' });
+        const url = window.URL.createObjectURL(blob);
+        var filename = keyword + '_搜索结果' + '.csv';
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+    }
+    //控制最小匹配度
+    handleChangeMatch = (value) => {
+        let { countrysSelected, keyword } = this.state;
+        countrysSelected.map(tag => keyword += tag);
+        this.setState({ minMatch: value }, () => { if (keyword) this.submitSearch() })
+    }
     render() {
         let { status, loading, keyword, resultKey, hits, options, countrysSelected, magnitudeSelected, timeSelected, countryDrawerVisible,
-            magModalVisible, timeModalVisible, sliderValue, startPage, total, pageSize, viewType, menuDrawerVisible, collapsed
+            magModalVisible, timeModalVisible, depthModalVisible, magSliderValue, startPage, total, pageSize, viewType, menuDrawerVisible,
+            collapsed, depthSelected, depSliderValue, timeSort, minMatch
         } = this.state;
         let hitItems = null;
         switch (hits && viewType) {
@@ -382,12 +492,12 @@ class elasticdemo extends Component {
                         <div className="list-item item" key={key}>
                             <div style={{ maxWidth: "50%" }}>
                                 <a className="item-name" href={url} target="_blank" rel="noopener noreferrer" dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }} />
-                                <p className="item-magnitude">震级：{magnitude}级</p>
+                                <p className="item-magnitude">震级：{magnitude} 级</p>
                                 <p className="item-time">时间：{datetime}</p>
                                 <p className="item-desc">来源：中国地震台网正式测定</p>
-                                <p className="item-desc">震中经度：{address.longitude}</p>
-                                <p className="item-desc">震中纬度：{address.latitude}</p>
-                                <p className="item-desc">震源深度：{depth}</p>
+                                <p className="item-desc">震中经度：{address.longitude}°</p>
+                                <p className="item-desc">震中纬度：{address.latitude}°</p>
+                                <p className="item-desc">震源深度：{depth} km</p>
                             </div>
                             <div style={{ width: 360, maxWidth: "50%" }}>
                                 <Map amapkey="3dabe81a1752997b9089ccb0b1bfcecb" zoom={7} center={[address.longitude, address.latitude]} events={this.mapEvents} plugins={['Scale']}>
@@ -418,12 +528,12 @@ class elasticdemo extends Component {
                                 </Map>
                             </div>
                             <a className="item-name" href={url} target="_blank" rel="noopener noreferrer" dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }} />
-                            <p className="item-magnitude">震级：{magnitude}级</p>
+                            <p className="item-magnitude">震级：{magnitude} 级</p>
                             <p className="item-time">时间：{datetime}</p>
                             <p className="item-desc">来源：中国地震台网正式测定</p>
-                            <p className="item-desc">震中经度：{address.longitude}</p>
-                            <p className="item-desc">震中纬度：{address.latitude}</p>
-                            <p className="item-desc">震源深度：{depth}</p>
+                            <p className="item-desc">震中经度：{address.longitude}°</p>
+                            <p className="item-desc">震中纬度：{address.latitude}°</p>
+                            <p className="item-desc">震源深度：{depth} km</p>
                         </div>
                     )}
                 </div>;
@@ -462,15 +572,15 @@ class elasticdemo extends Component {
                     dataIndex: "source",
                     align: "center"
                 }, {
-                    title: "震中经度",
+                    title: "震中经度(°)",
                     dataIndex: "longitude",
                     align: "center"
                 }, {
-                    title: "震中纬度",
+                    title: "震中纬度(°)",
                     dataIndex: "latitude",
                     align: "center"
                 }, {
-                    title: "震源深度",
+                    title: "震源深度(km)",
                     dataIndex: "depth",
                     align: "center",
                     sorter: (a, b) => a.depth - b.depth
@@ -497,9 +607,17 @@ class elasticdemo extends Component {
                 break;
         }
         const filters = <>
-            <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+            <div className="btn-link" style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
                 <Button type="primary"><a href="http://localhost:3000" target="_blank" rel="noopener noreferrer">可视化</a></Button>
                 <Button type="primary"><a href="http://10.2.14.251:5601/app/kibana#/visualize/edit/c813d550-1b2e-11ea-90dd-a99c382af56d?embed=true&_g=()&_a=(filters:!(),linked:!f,query:(language:kuery,query:''),uiState:(mapCenter:!(33.760882000869195,96.24023437500001),mapZoom:4),vis:(aggs:!((enabled:!t,id:'1',params:(),schema:metric,type:count),(enabled:!t,id:'2',params:(autoPrecision:!t,field:location,isFilteredByCollar:!t,mapBounds:(bottom_right:(lat:15.496032414238634,lon:140.537109375),top_left:(lat:46.830133640447414,lon:66.53320312499999)),mapCenter:(lat:32.509761735919426,lon:103.53515625),mapZoom:4,precision:3,useGeocentroid:!t),schema:segment,type:geohash_grid)),params:(addTooltip:!f,colorSchema:'Green+to+Red',dimensions:(geocentroid:(accessor:3,aggType:geo_centroid,format:(id:string),params:()),geohash:(accessor:1,aggType:geohash_grid,format:(id:string),params:(precision:3,useGeocentroid:!t)),metric:(accessor:2,aggType:count,format:(id:number),params:())),heatClusterSize:1.8,isDesaturated:!f,legendPosition:bottomright,mapCenter:!(0,0),mapType:Heatmap,mapZoom:2,wms:(enabled:!t,options:(attribution:'Maps+provided+by+Geoserver+of+ISPEC',format:image%2Fpng,layers:'forkibana:worldmap',styles:redline,transparent:!t,version:'1.3.0'),selectedTmsLayer:(attribution:'',id:road_map,maxZoom:20,minZoom:0,origin:elastic_maps_service),url:'http:%2F%2F10.2.14.246:8080%2Fgeoserver%2Fforkibana%2Fwms%3F')),title:geoserver2,type:tile_map))" target="_blank" rel="noopener noreferrer">Kibana</a></Button>
+            </div>
+            <div className="filter">
+                <div className="filter-title">
+                    <span>最小匹配度</span>
+                </div>
+                <div className="filter-content">
+                    <InputNumber min={0} max={1} step={0.05} onChange={this.handleChangeMatch} value={minMatch} />
+                </div>
             </div>
             <div className="filter">
                 <div className="filter-title">国家</div>
@@ -527,11 +645,11 @@ class elasticdemo extends Component {
                     <span className="clear-option" onClick={this.clearOption.bind(this, "magnitude")}>取消筛选</span>
                 </div>
                 <div className="filter-content">
-                    <Radio.Group options={magnitudeOptions} value={magnitudeSelected} onChange={this.magnitudeHandler} />
+                    <Radio.Group options={magnitudeFilter} value={magnitudeSelected} onChange={this.magnitudeHandler} />
                     <div>
                         <span onClick={this.showMagModal} className="span-link">自定义</span>
                         <Modal title="震级范围" visible={magModalVisible} onCancel={this.handleMagCancle} onOk={this.handleMagOk} okText="确定" cancelText="取消">
-                            <Slider range min={2} max={9} step={0.1} onChange={this.handleSliderChange} value={[sliderValue[0] ? sliderValue[0] : 2, sliderValue[1] ? sliderValue[1] : 9]} />
+                            <Slider range min={2} max={9} step={0.1} onChange={this.handleSliderChange} value={[magSliderValue[0] ? magSliderValue[0] : 2, magSliderValue[1] ? magSliderValue[1] : 9]} />
                         </Modal>
                     </div>
                 </div>
@@ -549,6 +667,21 @@ class elasticdemo extends Component {
                             <RangePicker locale={locale} onChange={this.handleTimeChange} disabledDate={disabledDate}
                                 showTime={{ hideDisabledOptions: true, defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('11:59:59', 'HH:mm:ss')] }}
                             />
+                        </Modal>
+                    </div>
+                </div>
+            </div>
+            <div className="filter">
+                <div className="filter-title">
+                    <span>震源深度</span>
+                    <span className="clear-option" onClick={this.clearOption.bind(this, "depth")}>取消筛选</span>
+                </div>
+                <div className="filter-content">
+                    <Radio.Group options={depthFilter} value={depthSelected} onChange={this.depthHandler} />
+                    <div>
+                        <span onClick={this.showDepModal} className="span-link">自定义</span>
+                        <Modal title="震源深度" visible={depthModalVisible} onCancel={this.handleDepCancle} onOk={this.handleDepOk} okText="确定" cancelText="取消">
+                            <Slider range min={-1} max={690} step={1} onChange={this.handleDepSliderChange} value={[depSliderValue[0] ? depSliderValue[0] : -1, depSliderValue[1] ? depSliderValue[1] : 690]} />
                         </Modal>
                     </div>
                 </div>
@@ -587,17 +720,31 @@ class elasticdemo extends Component {
                     <div className="es-main">
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <div className="total">共找到{total}条结果</div>
-                            <div className="options">
-                                <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >
-                                    网格
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                    时间排序：<Button className="time-sorter" onClick={this.timeSorter}>
+                                        {timeSort === null ? "未排序" : timeSort ? "降序" : "升序"}
+                                        {timeSort === null ? null :
+                                            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M704 704 704 0 576 0 576 1024 896 704Z" fill={timeSort ? "#08c" : ""} />
+                                                <path d="M320 320 320 1024 448 1024 448 0 128 320Z" fill={timeSort ? "" : "#08c"} />
+                                            </svg>
+                                        }
+                                    </Button>
                                 </div>
-                                <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>
-                                    列表
+                                <div className="options">
+                                    <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >
+                                        网格
+                                    </div>
+                                    <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>
+                                        列表
+                                    </div>
+                                    <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>
+                                        表格
                                 </div>
-                                <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>
-                                    表格
                                 </div>
                             </div>
+
                         </div>
                         <div className="filters">
                             {countrysSelected.length > 0 ?
@@ -606,6 +753,9 @@ class elasticdemo extends Component {
                                     <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
                                 </>
                                 : null}
+                        </div>
+                        <div className="download">
+                            下载当前页面的搜索结果：<Button type="primary" onClick={this.downloadSearchResult}>下载</Button>
                         </div>
                         <div className="hits-item">
                             {loading ?
@@ -631,7 +781,7 @@ class elasticdemo extends Component {
                                 : <Result status="error" title="检索库链接失败" subTitle="请检查网络链接或联系管理员." />}
                         </div>
                     </div>
-                </div>
+                </div >
                 <div className="es-footer">
                     <p>北京白家疃地球科学国家野外科学观测研究站</p>
                     <p>Copyright &copy;2020 All rights reserved.</p>

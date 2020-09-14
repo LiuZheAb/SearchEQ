@@ -191,9 +191,29 @@ body {
         color: #777;
       }
 
+      .time-sorter {
+        width: 76px;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover,
+        &:focus {
+          color: #08c;
+          border-color: #08c;
+        }
+
+        svg {
+          height: 16px;
+          fill: #666;
+          margin-left: 10px;
+        }
+      }
+
       .options {
         height: 32px;
-        /*margin-right: 20px;*/
+        margin-left: 15px;
         cursor: pointer;
 
         .option {
@@ -236,6 +256,22 @@ body {
 
           &:hover {
             color: #1890ff
+          }
+        }
+      }
+
+      .download {
+        margin-top: 15px;
+        text-align: right;
+
+        button {
+          background-color: #08c;
+          border-color: #08c;
+
+          &:hover,
+          &:focus {
+            background-color: rgb(2, 156, 233);
+            border-color: rgb(2, 156, 233);
           }
         }
       }
@@ -450,7 +486,7 @@ body {
   }
 
   .es-footer {
-    margin-bottom: 20px;
+    padding-bottom: 15px;
 
     p {
       margin-bottom: 0px;
@@ -472,6 +508,18 @@ body {
       .ant-picker-time-panel {
         width: calc(100% - 280px);
       }
+    }
+  }
+}
+
+.btn-link {
+  button {
+    background-color: #08c;
+    border-color: #08c;
+
+    &:hover {
+      background-color: rgb(2, 156, 233);
+      border-color: rgb(2, 156, 233);
     }
   }
 }
