@@ -741,7 +741,7 @@ class elasticdemo extends Component {
                                     </div>
                                     <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>
                                         表格
-                                </div>
+                                    </div>
                                 </div>
                             </div>
 
