@@ -1,8 +1,8 @@
 /*
- *文件名 : App.js
+ *文件名 : App_trash.js
  *作者 : 刘哲
- *创建时间 : 2020/8/17
- *文件描述 : ElasticSearch前端主体功能及界面
+ *创建时间 : 2020/9/10
+ *文件描述 : ElasticSearch前端主体功能及界面(已废弃部分功能1.地震带筛选2.类型筛选)
  */
 
 import React, { Component } from 'react';

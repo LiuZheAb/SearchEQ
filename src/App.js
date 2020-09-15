@@ -16,11 +16,10 @@ import Marker from 'react-amap/lib/marker';
 import { ConfigProvider, DatePicker, Tag, Button, Input, InputNumber, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
+import { devUrl, devIndexName, visUrl, kibanaUrl } from "./api.json";
 import "./index.less";
 
 const { Search } = Input, { RangePicker } = DatePicker;
-// const api = "http://10.2.14.251:8900/es", indexName = "earthquake-indexs-v2";
-const api = "http://192.168.2.134:8900/es", indexName = "earthquake-indexs";
 const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
     timeFilter = ['最近24小时', "最近一周", "最近一个月"],
@@ -57,21 +56,8 @@ const s = `
 ....... ......  ...     ....... .......         .......    .    ......
 `;
 const d = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 h1 Z` : '').join(' ') : '').join('\n');
-function Logo() {
-    return React.createElement("svg", {
-        xmlns: "http://www.w3.org/2000/svg",
-        viewBox: "0 0 144 16"
-    }, React.createElement("path", { d })
-    );
-}
 const menuD = "M 904 160 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 624 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 -312 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z";
-function MenuBtn() {
-    return React.createElement("svg", {
-        xmlns: "http://www.w3.org/2000/svg",
-        viewBox: "64 64 896 896"
-    }, React.createElement("path", { d: menuD })
-    );
-}
+
 class elasticdemo extends Component {
     constructor(props) {
         super(props);
@@ -123,8 +109,6 @@ class elasticdemo extends Component {
         window.addEventListener('resize', this.handleResize.bind(this)) //监听窗口大小改变
         this.handleClientW(window.innerWidth);
         this.submitSearch();
-
-
     }
     //比较窗口与768px大小
     handleClientW = width => {
@@ -146,9 +130,9 @@ class elasticdemo extends Component {
             resultKey: string ? string : keyword
         });
         countrysSelected.map(tag => keyword += tag);
-        axios.get(api + "/getHighLightPage", {
+        axios.get(devUrl + "/getHighLightPage", {
             params: {
-                indexName,
+                indexName: devIndexName,
                 startPage: pageNum ? pageNum : 1,
                 pageSize,
                 highFields: keyword,
@@ -159,7 +143,7 @@ class elasticdemo extends Component {
                 startTime,
                 endTime,
                 timeSort,
-                minMatch
+                minMatch: minMatch / 100
             }
         }).then(function (response) {
             let { list, total } = response.data;
@@ -188,9 +172,9 @@ class elasticdemo extends Component {
             this.setState({ options: [] });
         } else {
             let _this = this;
-            axios.get(api + "/getTitleTip", {
+            axios.get(devUrl + "/getTitleTip", {
                 params: {
-                    indexName,
+                    indexName: devIndexName,
                     highFields: keyword,
                 }
             }).then(function (response) {
@@ -462,7 +446,7 @@ class elasticdemo extends Component {
         ).join("\n");
         var blob = new Blob([result], { type: '.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel' });
         const url = window.URL.createObjectURL(blob);
-        var filename = keyword + '_搜索结果' + '.csv';
+        var filename = keyword + '_搜索结果.csv';
         const link = document.createElement('a');
         link.style.display = 'none';
         link.href = url;
@@ -488,7 +472,7 @@ class elasticdemo extends Component {
                 break;
             case "list":
                 hitItems = <div className="list">
-                    {hits.map(({ url, address, magnitude, datetime, depth }, key) =>
+                    {hits.map(({ url, address, magnitude, datetime, depth, score }, key) =>
                         <div className="list-item item" key={key}>
                             <div style={{ maxWidth: "50%" }}>
                                 <a className="item-name" href={url} target="_blank" rel="noopener noreferrer" dangerouslySetInnerHTML={{ __html: address.epicenter ? address.epicenter : "未命名" }} />
@@ -498,6 +482,7 @@ class elasticdemo extends Component {
                                 <p className="item-desc">震中经度：{address.longitude}°</p>
                                 <p className="item-desc">震中纬度：{address.latitude}°</p>
                                 <p className="item-desc">震源深度：{depth} km</p>
+                                {score ? <p className="item-desc">匹配度：{(score * 100).toFixed(2)}% </p> : null}
                             </div>
                             <div style={{ width: 360, maxWidth: "50%" }}>
                                 <Map amapkey="3dabe81a1752997b9089ccb0b1bfcecb" zoom={7} center={[address.longitude, address.latitude]} events={this.mapEvents} plugins={['Scale']}>
@@ -515,7 +500,7 @@ class elasticdemo extends Component {
                 break;
             case "grid":
                 hitItems = <div className="grid">
-                    {hits.map(({ url, address, magnitude, datetime, depth }, key) =>
+                    {hits.map(({ url, address, magnitude, datetime, depth, score }, key) =>
                         <div className="grid-item item" key={key}>
                             <div style={{ width: "100%", height: "160px" }}>
                                 <Map amapkey="3dabe81a1752997b9089ccb0b1bfcecb" zoom={7} center={[address.longitude, address.latitude]} events={this.mapEvents} plugins={['Scale']}>
@@ -534,12 +519,13 @@ class elasticdemo extends Component {
                             <p className="item-desc">震中经度：{address.longitude}°</p>
                             <p className="item-desc">震中纬度：{address.latitude}°</p>
                             <p className="item-desc">震源深度：{depth} km</p>
+                            {score ? <p className="item-desc">匹配度：{(score * 100).toFixed(2)}% </p> : null}
                         </div>
                     )}
                 </div>;
                 break;
             case "table":
-                const dataSource = hits.map(({ address, magnitude, datetime, depth, url }, index) => {
+                const dataSource = hits.map(({ address, magnitude, datetime, depth, url, score }, index) => {
                     return {
                         key: index,
                         epicenter: address.epicenter ? address.epicenter : "未命名",
@@ -549,7 +535,8 @@ class elasticdemo extends Component {
                         longitude: address.longitude,
                         latitude: address.latitude,
                         depth,
-                        url
+                        url,
+                        score
                     }
                 });
                 const columns = [{
@@ -584,6 +571,10 @@ class elasticdemo extends Component {
                     dataIndex: "depth",
                     align: "center",
                     sorter: (a, b) => a.depth - b.depth
+                }, {
+                    title: "匹配度",
+                    dataIndex: "score",
+                    align: "center",
                 }];
                 hitItems = <div className="table">
                     <ConfigProvider ConfigProvider locale={zhCN}>
@@ -607,16 +598,19 @@ class elasticdemo extends Component {
                 break;
         }
         const filters = <>
-            <div className="btn-link" style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
-                <Button type="primary"><a href="http://localhost:3000" target="_blank" rel="noopener noreferrer">可视化</a></Button>
-                <Button type="primary"><a href="http://10.2.14.251:5601/app/kibana#/visualize/edit/c813d550-1b2e-11ea-90dd-a99c382af56d?embed=true&_g=()&_a=(filters:!(),linked:!f,query:(language:kuery,query:''),uiState:(mapCenter:!(33.760882000869195,96.24023437500001),mapZoom:4),vis:(aggs:!((enabled:!t,id:'1',params:(),schema:metric,type:count),(enabled:!t,id:'2',params:(autoPrecision:!t,field:location,isFilteredByCollar:!t,mapBounds:(bottom_right:(lat:15.496032414238634,lon:140.537109375),top_left:(lat:46.830133640447414,lon:66.53320312499999)),mapCenter:(lat:32.509761735919426,lon:103.53515625),mapZoom:4,precision:3,useGeocentroid:!t),schema:segment,type:geohash_grid)),params:(addTooltip:!f,colorSchema:'Green+to+Red',dimensions:(geocentroid:(accessor:3,aggType:geo_centroid,format:(id:string),params:()),geohash:(accessor:1,aggType:geohash_grid,format:(id:string),params:(precision:3,useGeocentroid:!t)),metric:(accessor:2,aggType:count,format:(id:number),params:())),heatClusterSize:1.8,isDesaturated:!f,legendPosition:bottomright,mapCenter:!(0,0),mapType:Heatmap,mapZoom:2,wms:(enabled:!t,options:(attribution:'Maps+provided+by+Geoserver+of+ISPEC',format:image%2Fpng,layers:'forkibana:worldmap',styles:redline,transparent:!t,version:'1.3.0'),selectedTmsLayer:(attribution:'',id:road_map,maxZoom:20,minZoom:0,origin:elastic_maps_service),url:'http:%2F%2F10.2.14.246:8080%2Fgeoserver%2Fforkibana%2Fwms%3F')),title:geoserver2,type:tile_map))" target="_blank" rel="noopener noreferrer">Kibana</a></Button>
+            <div className="btn-link">
+                <Button type="primary"><a href={visUrl} target="_blank" rel="noopener noreferrer">可视化</a></Button>
+                <Button type="primary"><a href={kibanaUrl} target="_blank" rel="noopener noreferrer">Kibana</a></Button>
+            </div>
+            <div className="download">
+                下载当前页的搜索结果<Button type="primary" onClick={this.downloadSearchResult}>下载</Button>
             </div>
             <div className="filter">
                 <div className="filter-title">
                     <span>最小匹配度</span>
                 </div>
                 <div className="filter-content">
-                    <InputNumber min={0} max={1} step={0.05} onChange={this.handleChangeMatch} value={minMatch} />
+                    <InputNumber min={0} max={100} step={5} onChange={this.handleChangeMatch} value={minMatch} formatter={value => `${value}%`} parser={value => value.replace('%', '')} />
                 </div>
             </div>
             <div className="filter">
@@ -693,14 +687,18 @@ class elasticdemo extends Component {
                     <div className="header-content">
                         <div className="menu">
                             <div className="menu-btn" onClick={this.handleMenuClose}>
-                                {MenuBtn()}
+                                <svg viewBox="64 64 896 896" xmlns="http://www.w3.org/2000/svg">
+                                    <path d={menuD} />
+                                </svg>
                             </div>
                             <Drawer className="menu-drawer" visible={menuDrawerVisible} onClose={this.handleMenuClose}>
                                 {filters}
                             </Drawer>
                         </div>
                         <div className="logo">
-                            {Logo()}
+                            <svg viewBox="0 0 144 16" xmlns="http://www.w3.org/2000/svg">
+                                <path d={d} />
+                            </svg>
                         </div>
                         <div className="search-box">
                             <AutoComplete options={options} onSelect={value => { this.setState({ keyword: value }, () => { this.submitSearch(1, value); this.getSearchHintList(); }) }} defaultValue={keyword}>
@@ -718,44 +716,34 @@ class elasticdemo extends Component {
                         </div>
                     }
                     <div className="es-main">
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div className="sort-view">
                             <div className="total">共找到{total}条结果</div>
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <div>
-                                    时间排序：<Button className="time-sorter" onClick={this.timeSorter}>
-                                        {timeSort === null ? "未排序" : timeSort ? "降序" : "升序"}
-                                        {timeSort === null ? null :
-                                            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M704 704 704 0 576 0 576 1024 896 704Z" fill={timeSort ? "#08c" : ""} />
-                                                <path d="M320 320 320 1024 448 1024 448 0 128 320Z" fill={timeSort ? "" : "#08c"} />
-                                            </svg>
-                                        }
-                                    </Button>
-                                </div>
-                                <div className="options">
-                                    <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >
-                                        网格
-                                    </div>
-                                    <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>
-                                        列表
-                                    </div>
-                                    <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>
-                                        表格
-                                    </div>
-                                </div>
+                            <div className="options">
+                                <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >网格</div>
+                                <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>列表</div>
+                                <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>表格</div>
                             </div>
-
                         </div>
-                        <div className="filters">
-                            {countrysSelected.length > 0 ?
-                                <>
-                                    {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
-                                    <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
-                                </>
-                                : null}
-                        </div>
-                        <div className="download">
-                            下载当前页面的搜索结果：<Button type="primary" onClick={this.downloadSearchResult}>下载</Button>
+                        <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
+                            <div className="filters">
+                                {countrysSelected.length > 0 ?
+                                    <>
+                                        {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
+                                        <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
+                                    </>
+                                    : null}
+                            </div>
+                            <div className="time-block">
+                                时间排序：<Button className="time-sorter" onClick={this.timeSorter}>
+                                    {timeSort === null ? "未排序" : timeSort ? "降序" : "升序"}
+                                    {timeSort === null ? null :
+                                        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M704 704 704 0 576 0 576 1024 896 704Z" fill={timeSort ? "#08c" : ""} />
+                                            <path d="M320 320 320 1024 448 1024 448 0 128 320Z" fill={timeSort ? "" : "#08c"} />
+                                        </svg>
+                                    }
+                                </Button>
+                            </div>
                         </div>
                         <div className="hits-item">
                             {loading ?

@@ -5,6 +5,10 @@
  *文件描述 : ElasticSearch样式
  */
 
+html {
+  background-color: #f4f4f4;
+}
+
 body {
   height: auto !important;
 }
@@ -15,6 +19,7 @@ body {
 
 #es {
   background: #f4f4f4;
+  padding-top: 60px;
 
   .es-header {
     background: #2a4466;
@@ -30,7 +35,7 @@ body {
 
     .header-content {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1440px;
       display: flex;
       margin: 0 auto;
       padding: 0 15px;
@@ -40,7 +45,7 @@ body {
         height: 40px;
         padding: 5px;
         position: fixed;
-        top: 10px;
+        top: 2px;
         left: 5px;
         fill: #fff;
         display: none;
@@ -163,14 +168,15 @@ body {
   }
 
   .es-content {
-    max-width: 1200px;
+    max-width: 1440px;
     display: flex;
-    margin: 60px auto 0;
+    margin: 15px auto;
+    padding: 0 15px;
 
     .es-sider {
       background: #fff;
       padding: 15px;
-      margin: 15px 0 15px 15px;
+      margin-right: 15px;
       flex: 0 0 246px;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
       min-height: calc(100vh - 90px);
@@ -178,43 +184,57 @@ body {
 
     .es-main {
       width: 100%;
-      padding: 20px 20px 0;
+      padding: 15px;
       background: #fff;
-      margin: 15px;
       flex: auto;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
       min-height: 600px;
 
+      .sort-view {
+        margin-bottom: 15px;
+        position: relative;
+      }
+
       .total {
-        height: 30px;
-        line-height: 30px;
+        height: 32px;
+        line-height: 32px;
         color: #777;
       }
 
-      .time-sorter {
-        width: 76px;
-        padding: 4px 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+      .time-block {
+        position: absolute;
+        top: -47px;
+        right: 177px;
+        margin-bottom: 15px;
 
-        &:hover,
-        &:focus {
-          color: #08c;
-          border-color: #08c;
-        }
+        .time-sorter {
+          width: 74px;
+          padding: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: #000;
 
-        svg {
-          height: 16px;
-          fill: #666;
-          margin-left: 10px;
+          &:hover,
+          &:focus {
+            color: #08c;
+            border-color: #08c;
+          }
+
+          svg {
+            height: 16px;
+            fill: #666;
+            margin-left: 5px;
+          }
         }
       }
 
       .options {
         height: 32px;
-        margin-left: 15px;
         cursor: pointer;
+        position: absolute;
+        top: 0;
+        right: 0;
 
         .option {
           width: 54px;
@@ -248,11 +268,16 @@ body {
       }
 
       .filters {
+        .ant-tag {
+          margin-bottom: 15px;
+        }
+
         &-clear {
           color: #2440b3;
           padding-left: 15px;
           cursor: pointer;
           transition: all 0.3s;
+          white-space: nowrap;
 
           &:hover {
             color: #1890ff
@@ -260,25 +285,7 @@ body {
         }
       }
 
-      .download {
-        margin-top: 15px;
-        text-align: right;
-
-        button {
-          background-color: #08c;
-          border-color: #08c;
-
-          &:hover,
-          &:focus {
-            background-color: rgb(2, 156, 233);
-            border-color: rgb(2, 156, 233);
-          }
-        }
-      }
-
       .hits-item {
-        padding: 20px 0;
-
         .highlight {
           color: red;
           font-weight: 400;
@@ -334,7 +341,7 @@ body {
 
         .list {
           &-item {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
           }
@@ -486,6 +493,7 @@ body {
   }
 
   .es-footer {
+    margin-top: 15px;
     padding-bottom: 15px;
 
     p {
@@ -513,11 +521,33 @@ body {
 }
 
 .btn-link {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+
   button {
     background-color: #08c;
     border-color: #08c;
 
     &:hover {
+      background-color: rgb(2, 156, 233);
+      border-color: rgb(2, 156, 233);
+    }
+  }
+}
+
+.download {
+  line-height: 32px;
+  margin-bottom: 15px;
+
+  button {
+    background-color: #08c;
+    border-color: #08c;
+    width: 72px;
+    float: right;
+
+    &:hover,
+    &:focus {
       background-color: rgb(2, 156, 233);
       border-color: rgb(2, 156, 233);
     }
@@ -587,14 +617,27 @@ body {
   font-weight: bold;
 }
 
+.menu-drawer {
+  .ant-drawer-close {
+    padding: 4px;
+    margin-right: 0;
+  }
+
+  .ant-drawer-body {
+    padding: 24px 12px 15px;
+  }
+}
+
 @media (max-width:998px) {
   #es .es-content .es-main .hits-item .grid-item {
     width: 50%;
   }
 }
 
-@media (max-width:768px) {
+@media (max-width:790px) {
   #es {
+    padding-top: 94px;
+
     .es-header {
       .header-content {
         display: block;
@@ -615,16 +658,54 @@ body {
       }
     }
 
-    .es-sider {
-      display: none;
-    }
-
     .es-content {
-      margin-top: 110px;
+      margin: 10px auto;
+      padding: 0 10px;
+
+      .es-sider {
+        display: none;
+      }
 
       .es-main {
         margin: 0;
-        padding: 10px 10px 0;
+        padding: 10px;
+
+        .sort-view {
+          margin-bottom: 10px;
+        }
+
+        .time-block {
+          position: absolute;
+          right: 172px;
+          top: -42px;
+          margin-bottom: 10px;
+        }
+
+        .hits-item .grid-item {
+          width: 50%;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width:520px) {
+  #es .es-content {
+    margin: 0;
+    padding: 0;
+
+    .es-main {
+      width: 100%;
+      margin: 0;
+
+      .time-block {
+        position: relative;
+        top: 0;
+        right: 0;
+      }
+
+      .filters {
+        width: calc(100% - 154px);
       }
     }
   }
