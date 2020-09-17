@@ -18,13 +18,13 @@ import { LoadingOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@an
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
 import {
-    // devUrl, devIndexName,
-    proUrl, proIndexName,
+    devUrl, devIndexName,
+    // proUrl, proIndexName,
     docUrl, visUrl, kibanaUrl, getArticle, articleUrl, bingUrl
 } from "./api.json";
 import "./index.less";
 
-const url = proUrl, indexName = proIndexName;
+const url = devUrl, indexName = devIndexName;
 const { Search } = Input, { RangePicker } = DatePicker;
 const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
