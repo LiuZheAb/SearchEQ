@@ -5,7 +5,7 @@
  *文件描述 : ElasticSearch样式
  */
 
-html {
+ html {
   background-color: #f4f4f4;
 }
 
@@ -171,13 +171,14 @@ body {
 
   .es-content {
     max-width: 1440px;
+    min-height: calc(100vh - 200px);
     display: flex;
     margin: 15px auto;
     padding: 0 15px;
 
     .es-sider {
       background: #fff;
-      padding: 15px;
+      padding: 15px 15px 0;
       margin-right: 15px;
       flex: 0 0 246px;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
@@ -185,8 +186,9 @@ body {
     }
 
     .es-main {
-      width: 100%;
+      width: calc(70% - 5px);
       padding: 15px;
+      margin-right: 7.5px;
       background: #fff;
       flex: auto;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
@@ -216,6 +218,8 @@ body {
           align-items: center;
           justify-content: center;
           color: #000;
+          border-radius: 3px;
+          border-color: #ccc;
 
           &:hover,
           &:focus {
@@ -290,7 +294,6 @@ body {
       .hits-item {
         .highlight {
           color: red;
-          font-weight: 400;
         }
 
         .amap-container {
@@ -305,7 +308,6 @@ body {
             font-size: 12px;
           }
         }
-
 
         .marker {
           width: 16px;
@@ -343,7 +345,7 @@ body {
 
         .list {
           &-item {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
           }
@@ -369,7 +371,7 @@ body {
             text-decoration: underline;
 
             &:hover {
-              color: #1089ff
+              color: #1890ff
             }
           }
 
@@ -395,6 +397,10 @@ body {
         }
 
         .table {
+          .ant-table-content {
+            overflow-x: auto;
+          }
+
           .ant-table-thead>tr>th {
             padding: 0;
             text-align: center;
@@ -411,7 +417,7 @@ body {
             color: #2440b3;
 
             &:hover {
-              color: #1089ff
+              color: #1890ff
             }
           }
         }
@@ -492,6 +498,83 @@ body {
         }
       }
     }
+
+    .related {
+      width: calc(30% - 5px);
+      padding: 15px;
+      margin-left: 7.5px;
+      background: #fff;
+      flex: auto;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+      min-height: 600px;
+
+      .title {
+        height: 32px;
+        line-height: 32px;
+        border-left: 3px solid #08c;
+        border-bottom: 1px solid #e3e3e3;
+        padding-left: 15px;
+        margin-bottom: 15px;
+        font-weight: bold;
+        color: #000;
+      }
+
+      svg {
+        fill: #08c;
+        margin-left: 15px;
+      }
+
+      .articles {
+        margin-bottom: 15px;
+
+        ul {
+          width: 100%;
+          overflow: hidden;
+          margin: 0;
+          padding: 0;
+
+          li {
+            display: block;
+            width: 100%;
+            height: 34px;
+            white-space: nowrap;
+            word-break: break-all;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #2440b3;
+            cursor: pointer;
+            transition: color 0.3s;
+
+            &:hover {
+              color: #1890ff;
+            }
+          }
+        }
+      }
+
+      .keywords {
+        margin-bottom: 15px;
+
+        span {
+          font-size: 14px;
+          max-width: 100%;
+          height: 22px;
+          line-height: 22px;
+          display: inline-block;
+          text-align: center;
+          white-space: nowrap;
+          word-break: break-all;
+          word-wrap: break-word;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .ant-tag a {
+          color: #2f54eb;
+        }
+      }
+    }
   }
 
   .es-footer {
@@ -530,6 +613,7 @@ body {
   button {
     background-color: #08c;
     border-color: #08c;
+    width: 47.5%;
 
     &:hover {
       background-color: rgb(2, 156, 233);
@@ -539,14 +623,26 @@ body {
 }
 
 .download {
-  line-height: 32px;
   margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  div {
+    width: 47.5%;
+    line-height: 16px;
+
+    p {
+      height: 16px;
+      margin: 0;
+      text-align: center;
+    }
+  }
 
   button {
+    width: 47.5%;
     background-color: #08c;
     border-color: #08c;
-    width: 72px;
-    float: right;
 
     &:hover,
     &:focus {
@@ -557,7 +653,7 @@ body {
 }
 
 .filter {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 
   &-title {
     margin-bottom: 5px;
@@ -615,10 +711,6 @@ body {
   position: fixed;
 }
 
-.highlight {
-  font-weight: bold;
-}
-
 .menu-drawer {
   .ant-drawer-close {
     padding: 4px;
@@ -630,13 +722,23 @@ body {
   }
 }
 
-@media (max-width:998px) {
-  #es .es-content .es-main .hits-item .grid-item {
-    width: 50%;
+.full-screen {
+  width: 40px;
+  font-size: 28px;
+  padding: 0 6px;
+  line-height: 40px;
+  position: fixed;
+  right: 0;
+  top: 104px;
+  background: #888;
+  border-radius: 6px 0 0 6px;
+
+  svg {
+    fill: #fff;
   }
 }
 
-@media (max-width:790px) {
+@media (max-width:1024px) {
   #es {
     padding-top: 94px;
 
@@ -669,7 +771,7 @@ body {
       }
 
       .es-main {
-        margin: 0;
+        margin-right: 5px;
         padding: 10px;
 
         .sort-view {
@@ -687,11 +789,30 @@ body {
           width: 50%;
         }
       }
+
+      .related {
+        margin-left: 5px;
+        padding: 10px;
+      }
     }
   }
 }
 
-@media (max-width:520px) {
+@media (max-width:720px) and (min-width:576px) {
+  #es .es-content .es-main {
+    .filters {
+      width: calc(100% - 154px);
+    }
+
+    .time-block {
+      position: relative;
+      top: 0;
+      right: 0;
+    }
+  }
+}
+
+@media (max-width:576px) {
   #es .es-content {
     margin: 0;
     padding: 0;
@@ -699,16 +820,24 @@ body {
     .es-main {
       width: 100%;
       margin: 0;
+    }
+  }
 
-      .time-block {
-        position: relative;
-        top: 0;
-        right: 0;
-      }
+  .related {
+    display: none;
+  }
+}
 
-      .filters {
-        width: calc(100% - 154px);
-      }
+@media (max-width:495px) {
+  #es .es-content .es-main {
+    .time-block {
+      position: relative;
+      top: 0;
+      right: 0;
+    }
+
+    .filters {
+      width: calc(100% - 154px);
     }
   }
 }

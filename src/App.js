@@ -14,11 +14,17 @@ import locale from 'antd/es/date-picker/locale/zh_CN';
 import Map from 'react-amap/lib/map';
 import Marker from 'react-amap/lib/marker';
 import { ConfigProvider, DatePicker, Tag, Button, Input, InputNumber, Checkbox, Radio, Empty, Pagination, Modal, Slider, Result, Skeleton, Row, Col, Drawer, Table, AutoComplete } from "antd";
+import { LoadingOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
-import { devUrl, devIndexName, visUrl, kibanaUrl } from "./api.json";
+import {
+    // devUrl, devIndexName,
+    proUrl, proIndexName,
+    docUrl, visUrl, kibanaUrl, getArticle, articleUrl, bingUrl
+} from "./api.json";
 import "./index.less";
 
+const url = proUrl, indexName = proIndexName;
 const { Search } = Input, { RangePicker } = DatePicker;
 const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
@@ -92,7 +98,12 @@ class elasticdemo extends Component {
             depthSelected: null,
             depSliderValue: [null, null],
             timeSort: null,
-            minMatch: 0
+            minMatch: 0,
+            articleLoading: false,
+            articleList: [],
+            relatedKeywords: [],
+            fullScreen: false,
+            fullScreenVisible: true
         };
         const _this = this;
         this.mapEvents = {
@@ -109,11 +120,31 @@ class elasticdemo extends Component {
         window.addEventListener('resize', this.handleResize.bind(this)) //监听窗口大小改变
         this.handleClientW(window.innerWidth);
         this.submitSearch();
+        let system = {
+            win: false,
+            mac: false,
+            x11: false
+        };
+        let p = navigator.platform;
+        system.win = p.indexOf("Win") === 0;
+        system.mac = p.indexOf("Mac") === 0;
+        system.x11 = (p === "X11") || (p.indexOf("Linux") === 0);
+        if (system.win || system.mac || system.x11) {
+            //电脑端
+            this.setState({
+                fullScreenVisible: true
+            });
+        } else {
+            //移动端
+            this.setState({
+                fullScreenVisible: false
+            });
+        }
     }
-    //比较窗口与768px大小
+    //比较窗口与1024px大小
     handleClientW = width => {
         this.setState({
-            collapsed: width <= 768
+            collapsed: width <= 1024
         })
     }
     handleResize = e => {
@@ -124,15 +155,18 @@ class elasticdemo extends Component {
         let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected, startDepth, endDepth, timeSort, minMatch } = this.state;
         let _this = this;
         this.setState({
+            status: true,
             loading: true,
+            articleLoading: true,
             hits: null,
             startPage: pageNum ? pageNum : 1,
             resultKey: string ? string : keyword
         });
         countrysSelected.map(tag => keyword += tag);
-        axios.get(devUrl + "/getHighLightPage", {
+        // axios.get(devUrl + "/getHighLightPage", {
+        axios.get(url + "/getHighLightPage", {
             params: {
-                indexName: devIndexName,
+                indexName,
                 startPage: pageNum ? pageNum : 1,
                 pageSize,
                 highFields: keyword,
@@ -145,7 +179,7 @@ class elasticdemo extends Component {
                 timeSort,
                 minMatch: minMatch / 100
             }
-        }).then(function (response) {
+        }).then(response => {
             let { list, total } = response.data;
             _this.setState({
                 status: true,
@@ -153,10 +187,23 @@ class elasticdemo extends Component {
                 hits: list,
                 total: total
             });
-        }).catch(function (error) {
+        }).catch(() => {
             _this.setState({
                 loading: false,
                 status: false
+            });
+        });
+
+        axios.get(`${docUrl}?dataType=%E6%9C%9F%E5%88%8A%E8%AE%BA%E6%96%87&pn=1&expand=(+keywords:*断裂*++OR+keywords:*地震*++AND+name:*${keyword}地震*++AND+year:[+2013+TO+2021+])&searchParam=&seconSearchValue=&orderType=relation`, {
+        }).then(response => {
+            _this.setState({
+                articleList: response.data.result,
+                relatedKeywords: Object.keys(response.data.keywordsMap).splice(0, 9),
+                articleLoading: false
+            });
+        }).catch(() => {
+            _this.setState({
+                articleLoading: false
             });
         });
     }
@@ -172,9 +219,9 @@ class elasticdemo extends Component {
             this.setState({ options: [] });
         } else {
             let _this = this;
-            axios.get(devUrl + "/getTitleTip", {
+            axios.get(url + "/getTitleTip", {
                 params: {
-                    indexName: devIndexName,
+                    indexName,
                     highFields: keyword,
                 }
             }).then(function (response) {
@@ -440,30 +487,55 @@ class elasticdemo extends Component {
     //下载搜索结果
     downloadSearchResult = () => {
         let { hits, keyword } = this.state;
-        let title = "eqid,epicenter,datetime,magnitude,latitude,longitude,depth,createby,url,eqim\n"
-        let result = title + hits.map(({ eqid, address, datetime, magnitude, depth, createby, url, eqim }) =>
+        let title = "eqid,epicenter,datetime,magnitude,latitude,longitude,depth,createby,url,eqim\n";
+        //添加"\uFEFF"以解决EXCEL打开csv文件中文乱码问题
+        let result = "\uFEFF" + title + hits.map(({ eqid, address, datetime, magnitude, depth, createby, url, eqim }) =>
             `${"\"" + eqid + "\""},${"\"" + address.epicenter + "\""},${"\"" + datetime + "\""},${"\"" + magnitude + "\""},${"\"" + address.latitude + "\""},${"\"" + address.longitude + "\""},${"\"" + depth + "\""},${"\"" + createby + "\""},${"\"" + url + "\""},${"\"" + eqim + "\""}`
         ).join("\n");
-        var blob = new Blob([result], { type: '.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel' });
-        const url = window.URL.createObjectURL(blob);
-        var filename = keyword + '_搜索结果.csv';
+        let blob = new Blob([result], { type: '.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel' });
         const link = document.createElement('a');
+        link.download = keyword + '_search_result.csv';
+        link.href = window.URL.createObjectURL(blob);
         link.style.display = 'none';
-        link.href = url;
-        link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
     }
     //控制最小匹配度
-    handleChangeMatch = (value) => {
+    handleChangeMatch = value => {
         let { countrysSelected, keyword } = this.state;
         countrysSelected.map(tag => keyword += tag);
-        this.setState({ minMatch: value }, () => { if (keyword) this.submitSearch() })
+        this.setState({ minMatch: value }, () => { if (keyword) this.submitSearch() });
+    }
+    //跳转到知网文章
+    linkToArticle = uuid => {
+        axios.get(getArticle + uuid
+        ).then(response => {
+            let { thesis } = response.data;
+            let url = `${articleUrl}?dbcode=CJFD&dbname=${thesis.tableName2}&filename=${thesis.fileName}`;
+            window.open(thesis.webAddress ? thesis.webAddress : url)
+        }).catch(err => { });
+    }
+    //全屏显示
+    fullScreen = () => {
+        let el = document.documentElement;
+        let rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
+        rfs.call(el);
+        this.setState({
+            fullScreen: true
+        });
+    }
+    exitFullScreen = () => {
+        let el = document;
+        let cfs = el.cancelFullScreen || el.webkitCancelFullScreen || el.mozCancelFullScreen || el.exitFullScreen;
+        cfs.call(el);
+        this.setState({
+            fullScreen: false
+        });
     }
     render() {
         let { status, loading, keyword, resultKey, hits, options, countrysSelected, magnitudeSelected, timeSelected, countryDrawerVisible,
             magModalVisible, timeModalVisible, depthModalVisible, magSliderValue, startPage, total, pageSize, viewType, menuDrawerVisible,
-            collapsed, depthSelected, depSliderValue, timeSort, minMatch
+            collapsed, depthSelected, depSliderValue, timeSort, minMatch, articleList, relatedKeywords, articleLoading, fullScreen, fullScreenVisible
         } = this.state;
         let hitItems = null;
         switch (hits && viewType) {
@@ -571,11 +643,15 @@ class elasticdemo extends Component {
                     dataIndex: "depth",
                     align: "center",
                     sorter: (a, b) => a.depth - b.depth
-                }, {
-                    title: "匹配度",
-                    dataIndex: "score",
-                    align: "center",
                 }];
+                if (hits[0].score) {
+                    columns.push({
+                        title: "匹配度",
+                        dataIndex: "score",
+                        align: "center",
+                        render: score => (score * 100).toFixed(2) + "%"
+                    });
+                }
                 hitItems = <div className="table">
                     <ConfigProvider ConfigProvider locale={zhCN}>
                         <Table dataSource={dataSource} columns={columns} loading={loading} sticky={true}
@@ -598,13 +674,6 @@ class elasticdemo extends Component {
                 break;
         }
         const filters = <>
-            <div className="btn-link">
-                <Button type="primary"><a href={visUrl} target="_blank" rel="noopener noreferrer">可视化</a></Button>
-                <Button type="primary"><a href={kibanaUrl} target="_blank" rel="noopener noreferrer">Kibana</a></Button>
-            </div>
-            <div className="download">
-                下载当前页的搜索结果<Button type="primary" onClick={this.downloadSearchResult}>下载</Button>
-            </div>
             <div className="filter">
                 <div className="filter-title">
                     <span>最小匹配度</span>
@@ -680,6 +749,18 @@ class elasticdemo extends Component {
                     </div>
                 </div>
             </div>
+            {collapsed ?
+                <>
+                    <div className="btn-link">
+                        <Button type="primary"><a href={visUrl} target="_blank" rel="noopener noreferrer">可视化</a></Button>
+                        <Button type="primary"><a href={kibanaUrl} target="_blank" rel="noopener noreferrer">Kibana</a></Button>
+                    </div>
+                    <div className="download">
+                        下载当前页的搜索结果<Button type="primary" onClick={this.downloadSearchResult}>下载</Button>
+                    </div>
+                </>
+                : null
+            }
         </>;
         return (
             <div id="es">
@@ -715,66 +796,119 @@ class elasticdemo extends Component {
                             {filters}
                         </div>
                     }
-                    <div className="es-main">
-                        <div className="sort-view">
-                            <div className="total">共找到{total}条结果</div>
-                            <div className="options">
-                                <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >网格</div>
-                                <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>列表</div>
-                                <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>表格</div>
+                    <div style={{ display: "flex", minWidth: 0, width: "100%" }}>
+                        <div className="es-main">
+                            <div className="sort-view">
+                                <div className="total">共找到{total}条结果</div>
+                                <div className="options">
+                                    <div className={viewType === "grid" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "grid" })} style={{ borderRightColor: viewType === "table" ? "#ccc" : "#08c" }} >网格</div>
+                                    <div className={viewType === "list" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "list" })}>列表</div>
+                                    <div className={viewType === "table" ? "option-active option" : "option"} onClick={() => this.setState({ viewType: "table" })} style={{ borderLeftColor: viewType === "grid" ? "#ccc" : "#08c" }}>表格</div>
+                                </div>
                             </div>
-                        </div>
-                        <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
-                            <div className="filters">
-                                {countrysSelected.length > 0 ?
-                                    <>
-                                        {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
-                                        <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
-                                    </>
-                                    : null}
+                            <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
+                                <div className="filters">
+                                    {countrysSelected.length > 0 ?
+                                        <>
+                                            {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
+                                            <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
+                                        </>
+                                        : null}
+                                </div>
+                                <div className="time-block">
+                                    时间排序：<Button className="time-sorter" onClick={this.timeSorter}>
+                                        {timeSort === null ? "未排序" : timeSort ? "降序" : "升序"}
+                                        {timeSort === null ? null :
+                                            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M704 704 704 0 576 0 576 1024 896 704Z" fill={timeSort ? "#08c" : ""} />
+                                                <path d="M320 320 320 1024 448 1024 448 0 128 320Z" fill={timeSort ? "" : "#08c"} />
+                                            </svg>
+                                        }
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="time-block">
-                                时间排序：<Button className="time-sorter" onClick={this.timeSorter}>
-                                    {timeSort === null ? "未排序" : timeSort ? "降序" : "升序"}
-                                    {timeSort === null ? null :
-                                        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M704 704 704 0 576 0 576 1024 896 704Z" fill={timeSort ? "#08c" : ""} />
-                                            <path d="M320 320 320 1024 448 1024 448 0 128 320Z" fill={timeSort ? "" : "#08c"} />
-                                        </svg>
-                                    }
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="hits-item">
-                            {loading ?
-                                (viewType === "list" ? skeletonList :
-                                    viewType === "grid" ? skeletonGrid :
-                                        <div className="skeleton-table">
-                                            <div className="skeleton-table-head">
-                                                <Skeleton.Input active size="small" />
+                            <div className="hits-item">
+                                {loading ?
+                                    (viewType === "list" ? skeletonList :
+                                        viewType === "grid" ? skeletonGrid :
+                                            <div className="skeleton-table">
+                                                <div className="skeleton-table-head">
+                                                    <Skeleton.Input active size="small" />
+                                                </div>
+                                                {skeletonTable}
                                             </div>
-                                            {skeletonTable}
-                                        </div>
-                                )
-                                : null}
-                            {hitItems}
-                            {hits && viewType !== "table" ?
-                                < ConfigProvider locale={zhCN}>
-                                    <Pagination showQuickJumper showLessItems onChange={this.pageHandler} pageSizeOptions={[12, 24, 48, 96]} showTitle={false} current={startPage} total={total} pageSize={pageSize} />
-                                </ConfigProvider>
-                                : null}
-                            {status ?
-                                hits || loading ? null :
-                                    <Empty description={`没有搜索到 ${resultKey ? '"' + resultKey + '"' : ""} ${magnitudeSelected ? '"震级' + magnitudeSelected + '"' : ""} ${timeSelected ? '"' + timeSelected + '"' : ""} 的结果`} />
-                                : <Result status="error" title="检索库链接失败" subTitle="请检查网络链接或联系管理员." />}
+                                    )
+                                    : null}
+                                {hitItems}
+                                {hits && viewType !== "table" ?
+                                    < ConfigProvider locale={zhCN}>
+                                        <Pagination showQuickJumper showLessItems onChange={this.pageHandler} pageSizeOptions={[12, 24, 48, 96]} showTitle={false} current={startPage} total={total} pageSize={pageSize} />
+                                    </ConfigProvider>
+                                    : null}
+                                {status ?
+                                    hits || loading ? null :
+                                        <Empty description={`没有搜索到 ${resultKey ? '"' + resultKey + '"' : ""} ${magnitudeSelected ? '"震级' + magnitudeSelected + '"' : ""} ${timeSelected ? '"' + timeSelected + '"' : ""} 的结果`} />
+                                    : <Result status="error" title="数据库链接失败" subTitle="请检查网络链接或联系管理员" />}
+                            </div>
+                        </div>
+                        <div className="related">
+                            <div className="articles">
+                                <p className="title">相关文章</p>
+                                {articleLoading ?
+                                    <>数据加载中<LoadingOutlined /></>
+                                    :
+                                    <ul>
+                                        {articleList.length > 0 ?
+                                            articleList.map((item, index) =>
+                                                <li key={index} onClick={this.linkToArticle.bind(this, item.uuid)} title={item.name}>{item.name}</li>
+                                            )
+                                            : "没有搜索到相关的文章"}
+                                    </ul>
+                                }
+                            </div>
+                            <div className="keywords">
+                                <p className="title">相关主题词</p>
+                                {articleLoading ?
+                                    <>数据加载中<LoadingOutlined /></>
+                                    :
+                                    relatedKeywords.length > 0 ?
+                                        relatedKeywords.map((item, index) =>
+                                            <Tag key={index} color="geekblue" title={item}>
+                                                <a href={bingUrl + item} target="_blank" rel="noopener noreferrer">{item}</a>
+                                            </Tag>)
+                                        : "没有搜索到相关的主题词"
+                                }
+                            </div>
+                            <div>
+                                <p className="title">其他</p>
+                                <div className="btn-link">
+                                    <Button type="primary"><a href={visUrl} target="_blank" rel="noopener noreferrer">可视化</a></Button>
+                                    <Button type="primary"><a href={kibanaUrl} target="_blank" rel="noopener noreferrer">Kibana</a></Button>
+                                </div>
+                                <div className="download">
+                                    <div>
+                                        <p>下载当前页的</p>
+                                        <p>搜索结果</p>
+                                    </div>
+                                    <Button type="primary" onClick={this.downloadSearchResult}>下载</Button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div >
                 <div className="es-footer">
-                    <p>北京白家疃地球科学国家野外科学观测研究站</p>
-                    <p>Copyright &copy;2020 All rights reserved.</p>
-                    <p>官方网站: <a href="http://www.neobji.ac.cn/" target="_blank" rel="noopener noreferrer">http://www.neobji.ac.cn/</a></p>
+                    <p>元计算（天津）科技发展有限公司</p>
+                    <p>Copyright &copy;2020 All rights reserved</p>
+                    <p>官方网站: <a href="http://www.yuanjisuan.cn" target="_blank" rel="noopener noreferrer">http://www.yuanjisuan.cn</a></p>
                 </div>
+                {fullScreenVisible ?
+                    <div className="full-screen">
+                        {fullScreen ? <FullscreenExitOutlined onClick={this.exitFullScreen} style={{ fill: "#fff" }} />
+                            : <FullscreenOutlined onClick={this.fullScreen} style={{ fill: "#fff" }} />
+                        }
+                    </div>
+                    : null
+                }
             </div >
         )
     }
