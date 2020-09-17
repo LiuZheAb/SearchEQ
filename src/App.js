@@ -75,6 +75,7 @@ class elasticdemo extends Component {
             hits: null,
             options: [],
             countrysSelected: [],
+            countrysSelectedDrawer: [],
             magnitudeSelected: null,
             timeSelected: null,
             countryDrawerVisible: false,
@@ -152,7 +153,7 @@ class elasticdemo extends Component {
     }
     // 发起搜索请求，提交各项参数
     submitSearch = (pageNum, string) => {
-        let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected, startDepth, endDepth, timeSort, minMatch } = this.state;
+        let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected, countrysSelectedDrawer, startDepth, endDepth, timeSort, minMatch } = this.state;
         let _this = this;
         this.setState({
             status: true,
@@ -163,6 +164,7 @@ class elasticdemo extends Component {
             resultKey: string ? string : keyword
         });
         countrysSelected.map(tag => keyword += tag);
+        countrysSelectedDrawer.map(tag => keyword += tag);
         // axios.get(devUrl + "/getHighLightPage", {
         axios.get(url + "/getHighLightPage", {
             params: {
@@ -352,9 +354,12 @@ class elasticdemo extends Component {
             depSliderValue: [startDepth, endDepth],
         }, () => this.submitSearch());
     }
-    //清空类型、国家、地震带筛选项
+    //清空国家筛选项
     clearFilters = () => {
-        this.setState({ countrysSelected: [] }, () => this.submitSearch());
+        this.setState({
+            countrysSelected: [],
+            countrysSelectedDrawer: []
+        }, () => this.submitSearch());
     }
     //清空震级或地震活动时间筛选项
     clearOption = name => {
@@ -388,9 +393,9 @@ class elasticdemo extends Component {
     showCountryDrawer = () => {
         this.setState({ countryDrawerVisible: true });
     }
-    //选择国家时调用
-    handleCountrySelected = value => {
-        this.setState({ countrysSelected: value }, () => this.submitSearch());
+    //抽屉选择国家时调用
+    handleCountrySelectedDrawer = value => {
+        this.setState({ countrysSelectedDrawer: value }, () => this.submitSearch());
     }
     //关闭所有国家抽屉调用
     handleCountryClose = () => {
@@ -502,8 +507,9 @@ class elasticdemo extends Component {
     }
     //控制最小匹配度
     handleChangeMatch = value => {
-        let { countrysSelected, keyword } = this.state;
+        let { countrysSelected, countrysSelectedDrawer, keyword } = this.state;
         countrysSelected.map(tag => keyword += tag);
+        countrysSelectedDrawer.map(tag => keyword += tag);
         this.setState({ minMatch: value }, () => { if (keyword) this.submitSearch() });
     }
     //跳转到知网文章
@@ -511,8 +517,20 @@ class elasticdemo extends Component {
         axios.get(getArticle + uuid
         ).then(response => {
             let { thesis } = response.data;
-            let url = `${articleUrl}?dbcode=CJFD&dbname=${thesis.tableName2}&filename=${thesis.fileName}`;
-            window.open(thesis.webAddress ? thesis.webAddress : url)
+            let { doi, webAddress, fileName, tableName2 } = thesis;
+            if (webAddress && webAddress !== "无") {
+                window.open(webAddress);
+            } else if (doi) {
+                if (!fileName) {
+                    let a = doi.split(":");
+                    let b = a[a.length - 1].split(".");
+                    fileName = b[0] + b[b.length - 1].split("-").join("");
+                }
+                let url = `${articleUrl}?dbcode=CJFD&dbname=${tableName2}&filename=${fileName}`;
+                window.open(url);
+            } else {
+                alert("很抱歉，未找到该文章对应链接，无法跳转。")
+            }
         }).catch(err => { });
     }
     //全屏显示
@@ -533,7 +551,7 @@ class elasticdemo extends Component {
         });
     }
     render() {
-        let { status, loading, keyword, resultKey, hits, options, countrysSelected, magnitudeSelected, timeSelected, countryDrawerVisible,
+        let { status, loading, keyword, resultKey, hits, options, countrysSelected, countrysSelectedDrawer, magnitudeSelected, timeSelected, countryDrawerVisible,
             magModalVisible, timeModalVisible, depthModalVisible, magSliderValue, startPage, total, pageSize, viewType, menuDrawerVisible,
             collapsed, depthSelected, depSliderValue, timeSort, minMatch, articleList, relatedKeywords, articleLoading, fullScreen, fullScreenVisible
         } = this.state;
@@ -689,7 +707,7 @@ class elasticdemo extends Component {
                     <div>
                         <span onClick={this.showCountryDrawer} className="span-link">查看更多</span>
                         <Drawer title="国家" visible={countryDrawerVisible} onClose={this.handleCountryClose} width={collapsed ? "100%" : "50%"}>
-                            <Checkbox.Group onChange={this.handleCountrySelected} value={countrysSelected}>
+                            <Checkbox.Group onChange={this.handleCountrySelectedDrawer} value={countrysSelectedDrawer}>
                                 <Row gutter={5}>
                                     {globalCountrys.map((country, index) =>
                                         <Col span={6} key={index}>
@@ -808,9 +826,10 @@ class elasticdemo extends Component {
                             </div>
                             <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
                                 <div className="filters">
-                                    {countrysSelected.length > 0 ?
+                                    {countrysSelected.length > 0 || countrysSelectedDrawer.length > 0 ?
                                         <>
                                             {countrysSelected.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
+                                            {countrysSelectedDrawer.map((tag, index) => <Tag key={index} color="blue">{tag}</Tag>)}
                                             <span className="filters-clear" onClick={this.clearFilters}>清空所有筛选项</span>
                                         </>
                                         : null}
