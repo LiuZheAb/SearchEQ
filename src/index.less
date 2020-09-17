@@ -5,7 +5,7 @@
  *文件描述 : ElasticSearch样式
  */
 
- html {
+html {
   background-color: #f4f4f4;
 }
 
@@ -785,8 +785,12 @@ body {
           margin-bottom: 10px;
         }
 
-        .hits-item .grid-item {
-          width: 50%;
+        .hits-item {
+
+          .grid-item,
+          .skeleton-grid {
+            width: 50%;
+          }
         }
       }
 
