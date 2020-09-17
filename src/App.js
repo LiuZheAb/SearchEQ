@@ -198,9 +198,11 @@ class elasticdemo extends Component {
 
         axios.get(`${docUrl}?dataType=%E6%9C%9F%E5%88%8A%E8%AE%BA%E6%96%87&pn=1&expand=(+keywords:*断裂*++OR+keywords:*地震*++AND+name:*${keyword}地震*++AND+year:[+2013+TO+2021+])&searchParam=&seconSearchValue=&orderType=relation`, {
         }).then(response => {
+            let { keywordsMap } = response.data;
+            let keysSorted = Object.keys(keywordsMap).sort((a, b) => keywordsMap[b] - keywordsMap[a]);
             _this.setState({
                 articleList: response.data.result,
-                relatedKeywords: Object.keys(response.data.keywordsMap).splice(0, 9),
+                relatedKeywords: keysSorted.splice(0, 10),
                 articleLoading: false
             });
         }).catch(() => {
