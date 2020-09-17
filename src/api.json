@@ -1,12 +1,22 @@
 {
     "devUrl": "http://192.168.2.134:8900/es",
+    "devUrl_comment": "开发环境后端api地址",
     "devIndexName": "earthquake-indexs",
+    "devIndexName_comment": "开发环境es搜索库名称",
     "proUrl": "http://10.2.14.251:8900/es",
+    "proUrl_comment": "生产环境后端api地址",
     "proIndexName": "earthquake-indexs-v2",
+    "proIndexName_comment": "生产环境es搜索库名称",
     "visUrl": "http://localhost:3000",
+    "visUrl_comment": "SandDance可视化地址",
     "kibanaUrl": "http://10.2.14.251:5601/app/kibana#/visualize/edit/c813d550-1b2e-11ea-90dd-a99c382af56d?embed=true&_g=()&_a=(filters:!(),linked:!f,query:(language:kuery,query:''),uiState:(mapCenter:!(33.760882000869195,96.24023437500001),mapZoom:4),vis:(aggs:!((enabled:!t,id:'1',params:(),schema:metric,type:count),(enabled:!t,id:'2',params:(autoPrecision:!t,field:location,isFilteredByCollar:!t,mapBounds:(bottom_right:(lat:15.496032414238634,lon:140.537109375),top_left:(lat:46.830133640447414,lon:66.53320312499999)),mapCenter:(lat:32.509761735919426,lon:103.53515625),mapZoom:4,precision:3,useGeocentroid:!t),schema:segment,type:geohash_grid)),params:(addTooltip:!f,colorSchema:'Green+to+Red',dimensions:(geocentroid:(accessor:3,aggType:geo_centroid,format:(id:string),params:()),geohash:(accessor:1,aggType:geohash_grid,format:(id:string),params:(precision:3,useGeocentroid:!t)),metric:(accessor:2,aggType:count,format:(id:number),params:())),heatClusterSize:1.8,isDesaturated:!f,legendPosition:bottomright,mapCenter:!(0,0),mapType:Heatmap,mapZoom:2,wms:(enabled:!t,options:(attribution:'Maps+provided+by+Geoserver+of+ISPEC',format:image%2Fpng,layers:'forkibana:worldmap',styles:redline,transparent:!t,version:'1.3.0'),selectedTmsLayer:(attribution:'',id:road_map,maxZoom:20,minZoom:0,origin:elastic_maps_service),url:'http:%2F%2F10.2.14.246:8080%2Fgeoserver%2Fforkibana%2Fwms%3F')),title:geoserver2,type:tile_map))",
+    "kibanaUrl_comment": "kibana地址",
     "docUrl": "http://earthquake.ckcest.cn/solr/toSearch",
+    "docUrl_comment": "获取相关文章、相关主题词api",
     "getArticle": "http://earthquake.ckcest.cn/thesis/getByUuid?uuid=",
-    "articleUrl": "https://kns.cnki.net/KCMS/detail/detail.aspx",
-    "bingUrl": "https://cn.bing.com/search?q="
+    "getArticle_comment": "获取文章地址api",
+    "articleUrl": "https://kns.cnki.net/kcms/detail/detail.aspx",
+    "articleUrl_comment": "知网文章地址",
+    "bingUrl": "https://cn.bing.com/search?q=",
+    "bingUrl_comment": "bing搜索地址"
 }
