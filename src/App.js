@@ -165,7 +165,6 @@ class elasticdemo extends Component {
         });
         countrysSelected.map(tag => keyword += tag);
         countrysSelectedDrawer.map(tag => keyword += tag);
-        // axios.get(devUrl + "/getHighLightPage", {
         axios.get(url + "/getHighLightPage", {
             params: {
                 indexName,
