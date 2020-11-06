@@ -33,7 +33,7 @@ const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     skeletonList = [], skeletonGrid = [], skeletonTable = [];
 for (let i = 0; i < 12; i++) {
     skeletonList.push(
-        <div key={i} className="skeleton-list">
+        <div key={i} className="skeleton-list"> 
             <Skeleton active />
             <Skeleton.Image />
         </div>
