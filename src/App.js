@@ -18,13 +18,13 @@ import { LoadingOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@an
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
 import {
-    devUrl, devIndexName,
-    // proUrl, proIndexName,
+    // devUrl, devIndexName,
+    proUrl, proIndexName,
     docUrl, visUrl, kibanaUrl, getArticle, articleUrl, bingUrl
 } from "./api.json";
 import "./index.less";
 
-const url = devUrl, indexName = devIndexName;
+const url = proUrl, indexName = proIndexName;
 const { Search } = Input, { RangePicker } = DatePicker;
 const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
@@ -33,7 +33,7 @@ const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     skeletonList = [], skeletonGrid = [], skeletonTable = [];
 for (let i = 0; i < 12; i++) {
     skeletonList.push(
-        <div key={i} className="skeleton-list"> 
+        <div key={i} className="skeleton-list">
             <Skeleton active />
             <Skeleton.Image />
         </div>
@@ -61,7 +61,7 @@ const s = `
 ....... ....... ...     ....... .......         .......   ...   .......
 ....... ......  ...     ....... .......         .......    .    ......
 `;
-const d = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 h1 Z` : '').join(' ') : '').join('\n');
+const logoD = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 h1 Z` : '').join(' ') : '').join('\n');
 const menuD = "M 904 160 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 624 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 -312 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z";
 
 class elasticdemo extends Component {
@@ -102,7 +102,7 @@ class elasticdemo extends Component {
             minMatch: 0,
             articleLoading: false,
             articleList: [],
-            relatedKeywords: [],
+            relatedOrgs: [],
             fullScreen: false,
             fullScreenVisible: true
         };
@@ -118,7 +118,7 @@ class elasticdemo extends Component {
         };
     }
     componentDidMount() {
-        window.addEventListener('resize', this.handleResize.bind(this)) //监听窗口大小改变
+        window.addEventListener('resize', this.handleResize.bind(this)); //监听窗口大小改变
         this.handleClientW(window.innerWidth);
         this.submitSearch();
         let system = {
@@ -132,14 +132,10 @@ class elasticdemo extends Component {
         system.x11 = (p === "X11") || (p.indexOf("Linux") === 0);
         if (system.win || system.mac || system.x11) {
             //电脑端
-            this.setState({
-                fullScreenVisible: true
-            });
+            this.setState({ fullScreenVisible: true });
         } else {
             //移动端
-            this.setState({
-                fullScreenVisible: false
-            });
+            this.setState({ fullScreenVisible: false });
         }
     }
     //比较窗口与1024px大小
@@ -195,13 +191,13 @@ class elasticdemo extends Component {
             });
         });
 
-        axios.get(`${docUrl}?dataType=%E6%9C%9F%E5%88%8A%E8%AE%BA%E6%96%87&pn=1&expand=(+keywords:*断裂*++OR+keywords:*地震*++AND+name:*${keyword}地震*++AND+year:[+2013+TO+2021+])&searchParam=&seconSearchValue=&orderType=relation`, {
+        axios.get(`${docUrl}?dataType=期刊论文&pn=1&searchParam=${keyword}&seconSearchValue=地震+AND+断裂&orderType=relation`, {
         }).then(response => {
-            let { keywordsMap } = response.data;
-            let keysSorted = Object.keys(keywordsMap).sort((a, b) => keywordsMap[b] - keywordsMap[a]);
+            let { orgCount } = response.data;
+            let orgsSorted = Object.keys(orgCount).sort((a, b) => orgCount[b] - orgCount[a]);
             _this.setState({
                 articleList: response.data.result,
-                relatedKeywords: keysSorted.splice(0, 10),
+                relatedOrgs: orgsSorted.splice(0, 10),
                 articleLoading: false
             });
         }).catch(() => {
@@ -244,13 +240,13 @@ class elasticdemo extends Component {
     }
     //点击搜索图标或按Enter键调用，发起搜索请求
     searchHandler = value => {
-        this.props.history.push(this.state.keyword ? "/s?" + this.state.keyword : "/");
+        this.props.history.push(this.state.keyword ? "?" + this.state.keyword : "");
         this.submitSearch(undefined, value);
     }
     //控制菜单抽屉是否显示
     handleMenuClose = () => {
         let { menuDrawerVisible } = this.state;
-        this.setState({ menuDrawerVisible: !menuDrawerVisible })
+        this.setState({ menuDrawerVisible: !menuDrawerVisible });
     }
     //修改类型、国家、地震带筛选项调用
     filtersHandler = (key, value) => {
@@ -554,7 +550,7 @@ class elasticdemo extends Component {
     render() {
         let { status, loading, keyword, resultKey, hits, options, countrysSelected, countrysSelectedDrawer, magnitudeSelected, timeSelected, countryDrawerVisible,
             magModalVisible, timeModalVisible, depthModalVisible, magSliderValue, startPage, total, pageSize, viewType, menuDrawerVisible,
-            collapsed, depthSelected, depSliderValue, timeSort, minMatch, articleList, relatedKeywords, articleLoading, fullScreen, fullScreenVisible
+            collapsed, depthSelected, depSliderValue, timeSort, minMatch, articleList, relatedOrgs, articleLoading, fullScreen, fullScreenVisible
         } = this.state;
         let hitItems = null;
         switch (hits && viewType) {
@@ -672,7 +668,7 @@ class elasticdemo extends Component {
                     });
                 }
                 hitItems = <div className="table">
-                    <ConfigProvider ConfigProvider locale={zhCN}>
+                    <ConfigProvider locale={zhCN}>
                         <Table dataSource={dataSource} columns={columns} loading={loading} sticky={true}
                             pagination={{
                                 onChange: this.pageHandler,
@@ -797,7 +793,7 @@ class elasticdemo extends Component {
                         </div>
                         <div className="logo">
                             <svg viewBox="0 0 144 16" xmlns="http://www.w3.org/2000/svg">
-                                <path d={d} />
+                                <path d={logoD} />
                             </svg>
                         </div>
                         <div className="search-box">
@@ -861,7 +857,7 @@ class elasticdemo extends Component {
                                     : null}
                                 {hitItems}
                                 {hits && viewType !== "table" ?
-                                    < ConfigProvider locale={zhCN}>
+                                    <ConfigProvider locale={zhCN}>
                                         <Pagination showQuickJumper showLessItems onChange={this.pageHandler} pageSizeOptions={[12, 24, 48, 96]} showTitle={false} current={startPage} total={total} pageSize={pageSize} />
                                     </ConfigProvider>
                                     : null}
@@ -886,13 +882,13 @@ class elasticdemo extends Component {
                                     </ul>
                                 }
                             </div>
-                            <div className="keywords">
-                                <p className="title">相关主题词</p>
+                            <div className="orgs">
+                                <p className="title">相关机构</p>
                                 {articleLoading ?
                                     <>数据加载中<LoadingOutlined /></>
                                     :
-                                    relatedKeywords.length > 0 ?
-                                        relatedKeywords.map((item, index) =>
+                                    relatedOrgs.length > 0 ?
+                                        relatedOrgs.map((item, index) =>
                                             <Tag key={index} color="geekblue" title={item}>
                                                 <a href={bingUrl + item} target="_blank" rel="noopener noreferrer">{item}</a>
                                             </Tag>)
@@ -915,11 +911,11 @@ class elasticdemo extends Component {
                             </div>
                         </div>
                     </div>
-                </div >
+                </div>
                 <div className="es-footer">
-                    <p>元计算（天津）科技发展有限公司</p>
+                    <p>北京白家疃地球科学国家野外科学观测研究站</p>
                     <p>Copyright &copy;2020 All rights reserved</p>
-                    <p>官方网站: <a href="http://www.yuanjisuan.cn" target="_blank" rel="noopener noreferrer">http://www.yuanjisuan.cn</a></p>
+                    <p>官方网站: <a href="http://www.neobji.ac.cn" target="_blank" rel="noopener noreferrer">http://www.neobji.ac.cn</a></p>
                 </div>
                 {fullScreenVisible ?
                     <div className="full-screen">
@@ -938,7 +934,7 @@ export default class index extends Component {
     render() {
         return (
             <Router>
-                <Route path={["/", "/s"]} component={elasticdemo}></Route>
+                <Route path={["/"]} component={elasticdemo}></Route>
             </Router>
         )
     }

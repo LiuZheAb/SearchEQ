@@ -201,7 +201,7 @@ export default [
     { code: "SE", en: "Sweden", cn: "瑞典" },
     { code: "SG", en: "Singapore", cn: "新加坡" },
     { code: "SH", en: "St. Helena & Dependencies", cn: "圣赫勒拿" },
-    { code: "SI", en: "Slovenia", cn: "斯洛文尼亚" },
+    { code: "SI", en: "Slovenia", cn: "斯洛文尼亚" }, 
     { code: "SJ", en: "Svalbard and Jan Mayen", cn: "斯瓦尔巴群岛和扬马延岛" },
     { code: "SK", en: "Slovakia", cn: "斯洛伐克" },
     { code: "SL", en: "Sierra Leone", cn: "塞拉利昂" },
