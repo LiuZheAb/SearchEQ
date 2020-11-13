@@ -4,7 +4,6 @@
  *创建时间 : 2020/8/17
  *文件描述 : ElasticSearch前端主体功能及界面
  */
-
 import React, { Component } from 'react';
 import axios from "axios";
 import moment from 'moment';
@@ -24,8 +23,27 @@ import {
 } from "./api.json";
 import "./index.less";
 
+/**
+ * 
+ * 接口相关配置
+ * 
+ * @param {*} url 接口地址
+ * @param {*} indexName 调用es库名
+*/
 const url = proUrl, indexName = proIndexName;
 const { Search } = Input, { RangePicker } = DatePicker;
+/**
+ * 
+ * 接口相关配置
+ * 
+ * @param {*} magnitudeFilter 震级选项
+ * @param {*} countryFilter 国家选项
+ * @param {*} timeFilter 地震时间选项
+ * @param {*} depthFilter 震源深度选项
+ * @param {*} skeletonList 列表视图骨架屏
+ * @param {*} skeletonGrid 网格视图骨架屏
+ * @param {*} skeletonTable 表格视图骨架屏
+*/
 const magnitudeFilter = ["<= 3", ">= 3", ">= 4", ">= 5", ">= 6", ">= 7"],
     countryFilter = ["中国", "美国", "日本", "印度尼西亚", "智利", "新西兰"],
     timeFilter = ['最近24小时', "最近一周", "最近一个月"],
@@ -50,7 +68,14 @@ for (let i = 0; i < 12; i++) {
         </div>
     );
 }
+/**
+ * 
+ * 日历中不可选日期
+ * 
+ * @param {*} current 要判断是否符合要求的时间
+*/
 const disabledDate = current => current && current > moment();
+// logo字符串
 const s = `
 .......  ...... ....... ....... .......         ....... ... ...  ......
 ....... ....... ... ... ....... .......         ....... ... ... .......
@@ -61,7 +86,9 @@ const s = `
 ....... ....... ...     ....... .......         .......   ...   .......
 ....... ......  ...     ....... .......         .......    .    ......
 `;
+// 根据logo字符串拼接为svg路径
 const logoD = s.split('\n').map((row, irow) => row.length ? row.split('').map((char, icol) => char.trim() ? `M${2 * icol + 1} ${2 * (irow - 1) + 1} v1 h1 v-1 h1 Z` : '').join(' ') : '').join('\n');
+// 按钮svg路径
 const menuD = "M 904 160 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 624 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z m 0 -312 H 120 c -4.4 0 -8 3.6 -8 8 v 64 c 0 4.4 3.6 8 8 8 h 784 c 4.4 0 8 -3.6 8 -8 v -64 c 0 -4.4 -3.6 -8 -8 -8 Z";
 
 class elasticdemo extends Component {
@@ -117,8 +144,14 @@ class elasticdemo extends Component {
             }
         };
     }
+    // 组件挂载时调用
     componentDidMount() {
-        window.addEventListener('resize', this.handleResize.bind(this)); //监听窗口大小改变
+        //监听窗口大小改变
+        window.addEventListener('resize', this.handleResize.bind(this));
+        //监听全屏、取消全屏事件
+        ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'].forEach((item, index) => {
+            window.addEventListener(item, () => this.listenFullscreenChange());
+        });
         this.handleClientW(window.innerWidth);
         this.submitSearch();
         let system = {
@@ -138,16 +171,33 @@ class elasticdemo extends Component {
             this.setState({ fullScreenVisible: false });
         }
     }
-    //比较窗口与1024px大小
+    /**
+    * 
+    * 比较窗口与1024px大小
+    * 
+    * @param {*} width 当前窗口大小
+    */
     handleClientW = width => {
         this.setState({
             collapsed: width <= 1024
         })
     }
+    /**
+    * 
+    * 改变窗口大小调用
+    * 
+    * @param {*} e 改变窗口大小时返回的对象
+    */
     handleResize = e => {
         this.handleClientW(e.target.innerWidth);
     }
-    // 发起搜索请求，提交各项参数
+    /**
+    * 
+    * 发起搜索请求，提交各项参数
+    * 
+    * @param {*} pageNum 第几页
+    * @param {*} string 搜索关键词
+    */
     submitSearch = (pageNum, string) => {
         let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected, countrysSelectedDrawer, startDepth, endDepth, timeSort, minMatch } = this.state;
         let _this = this;
@@ -190,7 +240,7 @@ class elasticdemo extends Component {
                 status: false
             });
         });
-
+        // 获取相关文章列表
         axios.get(`${docUrl}?dataType=期刊论文&pn=1&searchParam=${keyword}&seconSearchValue=地震+AND+断裂&orderType=relation`, {
         }).then(response => {
             let { orgCount } = response.data;
@@ -206,7 +256,12 @@ class elasticdemo extends Component {
             });
         });
     }
-    //修改搜索框内容
+    /**
+    * 
+    * 修改搜索框内容
+    * 
+    * @param {*} e 修改搜索框内容时返回的对象
+    */
     handleKeywordChange = e => {
         let { value } = e.target;
         this.setState({ keyword: value }, () => this.getSearchHintList());
@@ -238,7 +293,12 @@ class elasticdemo extends Component {
             }).catch(function (error) { });
         }
     }
-    //点击搜索图标或按Enter键调用，发起搜索请求
+    /**
+    * 
+    * 点击搜索图标或按Enter键调用，发起搜索请求
+    * 
+    * @param {*} value 搜索关键词
+    */
     searchHandler = value => {
         this.props.history.push(this.state.keyword ? "?" + this.state.keyword : "");
         this.submitSearch(undefined, value);
@@ -248,11 +308,22 @@ class elasticdemo extends Component {
         let { menuDrawerVisible } = this.state;
         this.setState({ menuDrawerVisible: !menuDrawerVisible });
     }
-    //修改类型、国家、地震带筛选项调用
+    /**
+    * 
+    * 修改类型、国家、地震带筛选项调用
+    * 
+    * @param {*} key 类型或国家或地震
+    * @param {*} value 所选值
+    */
     filtersHandler = (key, value) => {
         this.setState({ [key]: value }, () => this.submitSearch());
     }
-    //修改震级筛选项调用
+    /**
+    * 
+    * 修改震级筛选项调用
+    * 
+    * @param {*} e 修改震级筛选项时返回的对象
+    */
     magnitudeHandler = e => {
         let { minNum, maxNum } = this.state;
         switch (e.target.value) {
@@ -292,7 +363,12 @@ class elasticdemo extends Component {
             magSliderValue: [minNum, maxNum],
         }, () => this.submitSearch());
     }
-    //修改地震活动时间筛选项调用
+    /**
+    * 
+    * 修改地震活动时间筛选项调用
+    * 
+    * @param {*} e 修改地震活动时间筛选项时返回的对象
+    */
     timeHandler = e => {
         let { startTime, endTime } = this.state;
         let currentTimeStamp = new Date().getTime();
@@ -319,7 +395,12 @@ class elasticdemo extends Component {
             endTime
         }, () => this.submitSearch());
     }
-    //修改震源深度筛选项调用
+    /**
+    * 
+    * 修改震源深度筛选项调用
+    * 
+    * @param {*} e 修改震源深度筛选项时返回的对象
+    */
     depthHandler = e => {
         let { startDepth, endDepth } = this.state;
         switch (e.target.value) {
@@ -358,7 +439,12 @@ class elasticdemo extends Component {
             countrysSelectedDrawer: []
         }, () => this.submitSearch());
     }
-    //清空震级或地震活动时间筛选项
+    /**
+    * 
+    * 清空震级或地震活动时间或震源深度筛选项
+    * 
+    * @param {*} name 震级或地震活动时间或震源深度
+    */
     clearOption = name => {
         switch (name) {
             case "magnitude":
@@ -390,7 +476,12 @@ class elasticdemo extends Component {
     showCountryDrawer = () => {
         this.setState({ countryDrawerVisible: true });
     }
-    //抽屉选择国家时调用
+    /**
+    * 
+    * 抽屉选择国家时调用
+    * 
+    * @param {*} value 选择的国家
+    */
     handleCountrySelectedDrawer = value => {
         this.setState({ countrysSelectedDrawer: value }, () => this.submitSearch());
     }
@@ -420,7 +511,12 @@ class elasticdemo extends Component {
             magModalVisible: false,
         }, () => this.submitSearch());
     }
-    //修改自定义震级滑块调用
+    /**
+    * 
+    * 修改自定义震级滑块调用
+    * 
+    * @param {*} value 自定义震级大小
+    */
     handleSliderChange = value => {
         this.setState({ magSliderValue: value });
     }
@@ -442,7 +538,12 @@ class elasticdemo extends Component {
             timeModalVisible: false
         }, () => this.submitSearch());
     }
-    //修改自定义时间范围调用
+    /**
+    * 
+    * 修改自定义时间范围调用
+    * 
+    * @param {*} value 自定义时间
+    */
     handleTimeChange = value => {
         this.setState({ datePickerValue: value });
     }
@@ -468,11 +569,22 @@ class elasticdemo extends Component {
             depthModalVisible: false,
         }, () => this.submitSearch());
     }
-    //修改自定义震源深度滑块调用
+    /**
+    * 
+    * 修改自定义震源深度滑块调用
+    * 
+    * @param {*} value 震源深度
+    */
     handleDepSliderChange = value => {
         this.setState({ depSliderValue: value });
     }
-    //修改页面及每页条数调用
+    /**
+    * 
+    * 修改页面及每页条数调用
+    * 
+    * @param {*} pageNum 页码
+    * @param {*} pageSize 每页条目
+    */
     pageHandler = (pageNum, pageSize) => {
         this.setState({
             startPage: pageNum,
@@ -502,14 +614,24 @@ class elasticdemo extends Component {
         document.body.appendChild(link);
         link.click();
     }
-    //控制最小匹配度
+    /**
+    * 
+    * 控制最小匹配度
+    * 
+    * @param {*} value 最小匹配度的值
+    */
     handleChangeMatch = value => {
         let { countrysSelected, countrysSelectedDrawer, keyword } = this.state;
         countrysSelected.map(tag => keyword += tag);
         countrysSelectedDrawer.map(tag => keyword += tag);
         this.setState({ minMatch: value }, () => { if (keyword) this.submitSearch() });
     }
-    //跳转到知网文章
+    /**
+    * 
+    * 跳转到知网文章
+    * 
+    * @param {*} uuid 文章的uuid
+    */
     linkToArticle = uuid => {
         axios.get(getArticle + uuid
         ).then(response => {
@@ -535,17 +657,17 @@ class elasticdemo extends Component {
         let el = document.documentElement;
         let rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullScreen;
         rfs.call(el);
-        this.setState({
-            fullScreen: true
-        });
     }
+    //退出全屏显示
     exitFullScreen = () => {
         let el = document;
         let cfs = el.cancelFullScreen || el.webkitCancelFullScreen || el.mozCancelFullScreen || el.exitFullScreen;
         cfs.call(el);
-        this.setState({
-            fullScreen: false
-        });
+    }
+    //监听全屏、退出全屏事件的回调函数
+    listenFullscreenChange() {
+        let isFullScreen = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+        this.setState({ fullScreen: isFullScreen ? true : false });
     }
     render() {
         let { status, loading, keyword, resultKey, hits, options, countrysSelected, countrysSelectedDrawer, magnitudeSelected, timeSelected, countryDrawerVisible,
