@@ -17,8 +17,8 @@ import { LoadingOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@an
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import globalCountrys from "./countrys";
 import {
-    // devUrl, devIndexName,
-    proUrl, proIndexName,
+    devUrl, devIndexName,
+    // proUrl, proIndexName,
     docUrl, visUrl, kibanaUrl, getArticle, articleUrl, bingUrl
 } from "./api.json";
 import "./index.less";
@@ -30,7 +30,7 @@ import "./index.less";
  * @param {*} url 接口地址
  * @param {*} indexName 调用es库名
 */
-const url = proUrl, indexName = proIndexName;
+const url = devUrl, indexName = devIndexName;
 const { Search } = Input, { RangePicker } = DatePicker;
 /**
  * 
@@ -200,7 +200,6 @@ class elasticdemo extends Component {
     */
     submitSearch = (pageNum, string) => {
         let { keyword, minNum, maxNum, startTime, endTime, pageSize, countrysSelected, countrysSelectedDrawer, startDepth, endDepth, timeSort, minMatch } = this.state;
-        let _this = this;
         this.setState({
             status: true,
             loading: true,
@@ -228,14 +227,14 @@ class elasticdemo extends Component {
             }
         }).then(response => {
             let { list, total } = response.data;
-            _this.setState({
+            this.setState({
                 status: true,
                 loading: false,
                 hits: list,
                 total: total
             });
         }).catch(() => {
-            _this.setState({
+            this.setState({
                 loading: false,
                 status: false
             });
@@ -245,13 +244,13 @@ class elasticdemo extends Component {
         }).then(response => {
             let { orgCount } = response.data;
             let orgsSorted = Object.keys(orgCount).sort((a, b) => orgCount[b] - orgCount[a]);
-            _this.setState({
+            this.setState({
                 articleList: response.data.result,
                 relatedOrgs: orgsSorted.splice(0, 10),
                 articleLoading: false
             });
         }).catch(() => {
-            _this.setState({
+            this.setState({
                 articleLoading: false
             });
         });
@@ -272,13 +271,12 @@ class elasticdemo extends Component {
         if (keyword === "") {
             this.setState({ options: [] });
         } else {
-            let _this = this;
             axios.get(url + "/getTitleTip", {
                 params: {
                     indexName,
                     highFields: keyword,
                 }
-            }).then(function (response) {
+            }).then(response => {
                 let hintList = response.data, options = [];
                 if (hintList) {
                     options = hintList.map((item, index) => {
@@ -289,8 +287,8 @@ class elasticdemo extends Component {
                         }
                     });
                 }
-                _this.setState({ options });
-            }).catch(function (error) { });
+                this.setState({ options });
+            }).catch(error => { });
         }
     }
     /**
@@ -926,9 +924,7 @@ class elasticdemo extends Component {
                     </div>
                 </div>
                 <div className="es-content">
-                    {collapsed ?
-                        null
-                        :
+                    {!collapsed &&
                         <div className="es-sider">
                             {filters}
                         </div>

@@ -1,5 +1,5 @@
 {
-    "devUrl": "http://192.168.2.134:8900/es",
+    "devUrl": "http://192.168.0.129:8900/es",
     "devUrl_comment": "开发环境后端api地址",
     "devIndexName": "earthquake-indexs",
     "devIndexName_comment": "开发环境es搜索库名称",
